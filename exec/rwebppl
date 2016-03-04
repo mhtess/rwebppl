@@ -18,7 +18,6 @@ function main() {
 
 	var argv = parseArgs(process.argv.slice(2));
     var programFile = argv._[0];
-	console.log('Processing', programFile);
 
     var code = fs.readFileSync(programFile, 'utf8');
 
