@@ -11,3 +11,5 @@ License: GPL-3
 URL: https://github.com/mhtess/rwebppl
 BugReports: http://github.com/mhtess/rwebppl/issues
 LazyData: TRUE
+Imports:
+  jsonlite
