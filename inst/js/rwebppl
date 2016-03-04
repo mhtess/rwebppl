@@ -8,26 +8,35 @@ var webppl_main = require('../node_modules/webppl/src/main');
 var util = require('../node_modules/webppl/src/util');
 var pkg = require('../node_modules/webppl/src/pkg');
 
+function cutByBuffer(piecesSoFar, restOfStr, buff) {
+  if (restOfStr.length < buff) {
+    piecesSoFar.push(restOfStr);
+  } else {
+    piecesSoFar.push(restOfStr.slice(0,buff));
+    cutByBuffer(piecesSoFar, restOfStr.slice(buff), buff);
+  }
+  return piecesSoFar;
+}
+
 function printWebPPLValue(x) {
-  // if (isErp(x)) {
-  //   x.print();
-  // } else {
-    // console.log(x)
-    console.log(util.serialize(x));
-  // }
+  var serialized_x = util.serialize(x);
+  var arrayed_x = cutByBuffer([], serialized_x, 8000);
+  arrayed_x.forEach(function(entry) {
+    console.log(entry);
+  })
 };
 
 function main() {
 
-	   var argv = parseArgs(process.argv.slice(2));
-     var programFile = argv._[0];
+	var argv = parseArgs(process.argv.slice(2));
+  var programFile = argv._[0];
 
-    var code = fs.readFileSync(programFile, 'utf8');
+  var code = fs.readFileSync(programFile, 'utf8');
 
-    var packagePaths = [
-      path.join(path.dirname(programFile), 'node_modules'),
-      pkg.globalPkgDir()
-    ];
+  var packagePaths = [
+    path.join(path.dirname(programFile), 'node_modules'),
+    pkg.globalPkgDir()
+  ];
 
   var packages = util.asArray(argv.require).map(function(name_or_path) {
     return pkg.load(pkg.read(name_or_path, packagePaths, argv.verbose));
@@ -43,6 +52,7 @@ function main() {
 	}, {
     extra: webppl_main.parsePackageCode(packages, false)
   })
+
 }
 
 main();

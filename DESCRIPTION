@@ -6,10 +6,13 @@ Authors@R: c(
   person("Mika", "Braginsky", email = "mika.br@gmail.com", role = "aut"),
   person("Michael Henry", "Tessler", email = "mtessler@stanford.edu", role = c("cre", "aut")))
 Description: More about what it does (maybe more than one line)
-Depends: R (>= 3.2.3)
+Depends:
+    R (>= 3.2.3)
 License: GPL-3
 URL: https://github.com/mhtess/rwebppl
 BugReports: http://github.com/mhtess/rwebppl/issues
 LazyData: TRUE
 Imports:
-  jsonlite
+    jsonlite
+RoxygenNote: 5.0.1
+SystemRequirements: webppl
