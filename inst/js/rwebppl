@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+
+var parseArgs = require('minimist');
+var fs = require('fs');
+var webppl = require('webppl')
+var util = require('../node_modules/webppl/src/util');
+
+function cutByBuffer(piecesSoFar, restOfStr, buff) {
+  if (restOfStr.length < buff) {
+    piecesSoFar.push(restOfStr);
+  } else {
+    piecesSoFar.push(restOfStr.slice(0,buff));
+    cutByBuffer(piecesSoFar, restOfStr.slice(buff), buff);
+  }
+  return piecesSoFar;
+}
+
+function printWebPPLValue(x) {
+  var serialized_x = util.serialize(x);
+  var arrayed_x = cutByBuffer([], serialized_x, 8000);
+  arrayed_x.forEach(function(entry) {
+    console.log(entry);
+  })
+};
+
+function main() {
+
+	var argv = parseArgs(process.argv.slice(2));
+  var programFile = argv._[0];
+
+  var code = fs.readFileSync(programFile, 'utf8');
+
+	webppl.run(code, function(s,x) {
+	  printWebPPLValue(x);
+	}, {})
+}
+
+main();
