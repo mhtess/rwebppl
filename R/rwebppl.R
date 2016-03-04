@@ -21,7 +21,7 @@ tidy_output <- function(model_output) {
 #' @examples
 #' model_code <- "flip(0.5)"
 #' webppl(model_code)
-webppl <- function(model_code = NULL, model_file = NULL) {
+webppl <- function(model_code = NULL, model_file = NULL, model_packages = NULL) {
   if (!is.null(model_code)) {
     cat(model_code, file = (f <- tempfile()))
   } else if (!is.null(model_file) && file.exists(model_file)) {
@@ -29,9 +29,13 @@ webppl <- function(model_code = NULL, model_file = NULL) {
   } else {
     stop("no model file or model code supplied")
   }
+  if (!is.null(model_packages)) {
+    package_args<-paste(lapply(model_packages, function(x) paste("--require", x)), 
+          collapse = " ")
+  }
   js_path <- system.file("js", package = "rwebppl")
   script_path <- file.path(js_path, "rwebppl")
-  output_string <- paste(system2(script_path, args = c(f), stdout = TRUE),
+  output_string <- paste(system2(script_path, args = c(f, package_args), stdout = TRUE),
                          collapse = "")
   tidy_output(jsonlite::fromJSON(output_string))
 }
