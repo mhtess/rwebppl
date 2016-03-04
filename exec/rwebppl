@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+
+var parseArgs = require('minimist');
+var fs = require('fs');
+var webppl = require('webppl')
+var util = require('../node_modules/webppl/src/util');
+
+function printWebPPLValue(x) {
+  // if (isErp(x)) {
+  //   x.print();
+  // } else {
+    // console.log(x)
+    console.log(util.serialize(x));
+  // }
+};
+
+function main() {
+
+	var argv = parseArgs(process.argv.slice(2));
+    var programFile = argv._[0];
+	console.log('Processing', programFile);
+
+    var code = fs.readFileSync(programFile, 'utf8');
+
+	webppl.run(code, function(s,x) {
+	  printWebPPLValue(x);
+	}, {})
+}
+
+main();
