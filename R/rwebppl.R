@@ -6,8 +6,8 @@
 #' @examples
 install_webppl <- function() {
   pkg_path <- system.file(package = "rwebppl")
-  system(sprintf("cd %s; npm init -y . &>/dev/null; npm install --save webppl &>/dev/null; cd node_modules/webppl; npm install &>/dev/null", pkg_path),
-         ignore.stdout = TRUE, ignore.stderr = TRUE)
+  system(sprintf("cd %s && npm init -y . &>/dev/null && npm install --save webppl &>/dev/null && cd node_modules/webppl && npm install &>/d", pkg_path),
+         ignore.stdout = TRUE, ignore.stderr = FALSE)
 }
 
 tidy_output <- function(model_output) {
@@ -50,5 +50,9 @@ webppl <- function(model_code = NULL, model_file = NULL, model_packages = NULL) 
   script_path <- system.file("js/rwebppl", package = "rwebppl")
   output_string <- paste(system2(script_path, args = c(f, package_args), stdout = TRUE),
                          collapse = "")
-  tidy_output(jsonlite::fromJSON(output_string))
+  if (output_string=="") {
+    ""
+  } else {
+    tidy_output(jsonlite::fromJSON(output_string))
+  }
 }
