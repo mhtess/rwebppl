@@ -1,0 +1,6 @@
+
+var ar = mhtest.fillArray(0.3,10)
+
+map(function(x){
+	return flip(x)
+}, ar)
