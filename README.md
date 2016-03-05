@@ -1,33 +1,42 @@
 # RWebPPL
 
-### Sketch of plan
+## Getting started
 
-+ change WebPPL binary
-+ `util.serialize` output in `topK` and `printWebPPLValue`
-+ unserialize using `jsonlite` in R
+Get package
 
-~~~
-wppl_model <- "var data =  5
-var n = 10
+```
+library(devtools)
+install_github("mhtess/rwebppl")
+```
 
-var model = function(){
-	var theta = beta(1,1)
+Install webppl
+```
+library(rwebppl)
+install_webppl()
+```
 
-	var score = binomialERP.score([theta,n], data);
+### Using webppl 
 
-	factor(score)
+Write model in RStudio
 
-	return {"theta":theta}
-}
+```
+model <- "
+ var a = flip(0.3)
+ var b = flip(0.6)
+ return a + b
+"
+webppl(model)
+```
 
-var results = MH(model, 5000)"
+Write model in external file
 
+```
+webppl(model_file = "path/to/model/model.wppl")
+```
 
-rwebppl <- function(model_file, outputs) {
-	model <- read(model_file)
-	outputs_model <- model + sprintf("print(ouputs)")
-	command <- sprintf("webppl %s", outputs_model)
-	result <- system(command, intern = TRUE)
-	do_stuff(result)
-}
-~~~
+Use WebPPL packages in more complex models
+
+```
+webppl(model_file = "path/to/model/model.wppl",
+	model_packages = c("projectUtils", "helpers"))
+```
