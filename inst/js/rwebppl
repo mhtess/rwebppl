@@ -4,9 +4,9 @@ var parseArgs = require('minimist');
 var path = require('path');
 var fs = require('fs');
 var webppl = require('webppl')
-var webppl_main = require('../node_modules/webppl/src/main');
-var util = require('../node_modules/webppl/src/util');
-var pkg = require('../node_modules/webppl/src/pkg');
+var webppl_main = require('webppl/src/main');
+var util = require('webppl/src/util');
+var pkg = require('webppl/src/pkg');
 
 function cutByBuffer(piecesSoFar, restOfStr, buff) {
   if (restOfStr.length < buff) {

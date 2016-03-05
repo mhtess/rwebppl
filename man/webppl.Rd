@@ -4,7 +4,7 @@
 \alias{webppl}
 \title{webppl}
 \usage{
-webppl(model_code = NULL, model_file = NULL)
+webppl(model_code = NULL, model_file = NULL, model_packages = NULL)
 }
 \arguments{
 \item{model_code}{A string of a webppl program.}
@@ -19,7 +19,6 @@ Runs webppl model.
 }
 \examples{
 model_code <- "flip(0.5)"
-print(getwd())
 webppl(model_code)
 }
 

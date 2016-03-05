@@ -1,3 +1,15 @@
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
+install_webppl <- function() {
+  pkg_path <- system.file(package = "rwebppl")
+  system(sprintf("cd %s; npm init -y . &>/dev/null; npm install --save webppl &>/dev/null; cd node_modules/webppl; npm install &>/dev/null", pkg_path),
+         ignore.stdout = TRUE, ignore.stderr = TRUE)
+}
+
 tidy_output <- function(model_output) {
   if (!is.null(names(model_output)) &&
       all(names(model_output) == c("probs", "support"))) {
@@ -30,11 +42,12 @@ webppl <- function(model_code = NULL, model_file = NULL, model_packages = NULL) 
     stop("no model file or model code supplied")
   }
   if (!is.null(model_packages)) {
-    package_args<-paste(lapply(model_packages, function(x) paste("--require", x)), 
-          collapse = " ")
+    package_args <- paste(lapply(model_packages, function(x) paste("--require", x)),
+                          collapse = " ")
+  } else {
+    package_args <- ""
   }
-  js_path <- system.file("js", package = "rwebppl")
-  script_path <- file.path(js_path, "rwebppl")
+  script_path <- system.file("js/rwebppl", package = "rwebppl")
   output_string <- paste(system2(script_path, args = c(f, package_args), stdout = TRUE),
                          collapse = "")
   tidy_output(jsonlite::fromJSON(output_string))
