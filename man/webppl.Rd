@@ -10,6 +10,8 @@ webppl(model_code = NULL, model_file = NULL, model_packages = NULL)
 \item{model_code}{A string of a webppl program.}
 
 \item{model_file}{A file containing a webppl program.}
+
+\item{model_packages}{A character vector of external package names to use.}
 }
 \value{
 The model's return value(s).

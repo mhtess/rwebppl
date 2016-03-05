@@ -2,11 +2,14 @@
 % Please edit documentation in R/rwebppl.R
 \name{install_webppl}
 \alias{install_webppl}
-\title{Title}
+\title{Install webppl}
 \usage{
 install_webppl()
 }
 \description{
-Title
+Install webppl
+}
+\examples{
+\dontrun{install_webppl()}
 }
 

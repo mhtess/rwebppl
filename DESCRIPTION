@@ -15,4 +15,4 @@ LazyData: TRUE
 Imports:
     jsonlite
 RoxygenNote: 5.0.1
-SystemRequirements: webppl
+SystemRequirements: node
