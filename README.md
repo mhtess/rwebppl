@@ -1,42 +1,37 @@
 # RWebPPL
 
-## Getting started
+## Installation
 
-Get package
+To use rwebppl, you need to have [nodejs](https://nodejs.org/en/) installed.
 
-```
-library(devtools)
-install_github("mhtess/rwebppl")
-```
-
-Install webppl
-```
-library(rwebppl)
-install_webppl()
-```
-
-### Using webppl 
-
-Write model in RStudio
+You can install rwebppl from GitHub using devtools:
 
 ```
-model <- "
+devtools::install_github("mhtess/rwebppl")
+```
+
+## Usage
+
+Write a model as a string in R:
+
+```
+my_model <- "
  var a = flip(0.3)
  var b = flip(0.6)
  return a + b
 "
-webppl(model)
+webppl(my_model)
 ```
 
-Write model in external file
+Or write a model in an external file:
 
 ```
 webppl(model_file = "path/to/model/model.wppl")
 ```
 
-Use WebPPL packages in more complex models
+You can also use WebPPL packages in more complex models:
 
 ```
 webppl(model_file = "path/to/model/model.wppl",
-	model_packages = c("projectUtils", "helpers"))
+       model_packages = c("projectUtils", "helpers"))
 ```
