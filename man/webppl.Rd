@@ -4,12 +4,17 @@
 \alias{webppl}
 \title{webppl}
 \usage{
-webppl(model_code = NULL, model_file = NULL, model_packages = NULL)
+webppl(model_code = NULL, model_file = NULL, data = NULL,
+  data_var = NULL, model_packages = NULL)
 }
 \arguments{
 \item{model_code}{A string of a webppl program.}
 
 \item{model_file}{A file containing a webppl program.}
+
+\item{data}{A data frame (or other serializable object) that can be referenced in the model.}
+
+\item{data_var}{A name by which data can be referenced in the model.}
 
 \item{model_packages}{A character vector of external package names to use.}
 }

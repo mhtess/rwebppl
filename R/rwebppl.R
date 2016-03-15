@@ -40,6 +40,8 @@ tidy_output <- function(model_output) {
 #'
 #' @param model_code A string of a webppl program.
 #' @param model_file A file containing a webppl program.
+#' @param data A data frame (or other serializable object) that can be referenced in the model.
+#' @param data_var A name by which data can be referenced in the model.
 #' @param model_packages A character vector of external package names to use.
 #'
 #' @return The model's return value(s).
@@ -48,8 +50,19 @@ tidy_output <- function(model_output) {
 #' @examples
 #' model_code <- "flip(0.5)"
 #' webppl(model_code)
-webppl <- function(model_code = NULL, model_file = NULL,
-                   model_packages = NULL) {
+webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
+                   data_var = NULL, model_packages = NULL) {
+  packages <- model_packages
+  if (!is.null(data) && !is.null(data_var)) {
+    tmp_dir <- tempdir()
+    dir.create(file.path(tmp_dir, data_var), showWarnings = FALSE)
+    cat(sprintf('{"name":"%s","main":"index.js"}', data_var),
+        file = file.path(tmp_dir, data_var, "package.json"))
+    data_string <- jsonlite::toJSON(data)
+    cat(sprintf("module.exports = JSON.parse('%s')", data_string),
+        file = file.path(tmp_dir, data_var, "index.js"))
+    packages <- c(packages, file.path(tmp_dir, data_var))
+  }
   if (!is.null(model_code)) {
     cat(model_code, file = (f <- tempfile()))
   } else if (!is.null(model_file) && file.exists(model_file)) {
@@ -57,8 +70,8 @@ webppl <- function(model_code = NULL, model_file = NULL,
   } else {
     stop("no model file or model code supplied")
   }
-  if (!is.null(model_packages)) {
-    package_args <- unlist(lapply(model_packages,
+  if (!is.null(packages)) {
+    package_args <- unlist(lapply(packages,
                                   function(x) paste("--require", x)))
   } else {
     package_args <- ""
