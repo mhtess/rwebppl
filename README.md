@@ -37,3 +37,54 @@ You can also use WebPPL packages in more complex models:
 webppl(model_file = "path/to/model/model.wppl",
        model_packages = c("projectUtils", "helpers"))
 ```
+
+Data can be passed from R to WebPPL as in:
+
+```
+webppl(my_model, 
+	   data = df, 
+	   data_var = "myDF")
+```
+
+The data can be accessed in your WebPPL model under the name `myDF`. 
+
+If `df` looks like this in R:
+
+| Participant | Condition | Response |
+|-------------|-----------|----------|
+| 1           | A         | 0.4      |
+| 1           | B         | 0.8      |
+| 2           | A         | 0.2      |
+
+It will exist in WebPPL as a list of js objects e.g.
+
+```
+[
+{
+  participant: 0,
+  condition: "A",
+  response: 0.4
+},
+{
+  participant: 0,
+  condition: "B",
+  response: 0.8
+},
+{
+  participant: 1,
+  condition: "A",
+  response: 0.2
+}, 
+...
+]
+```
+
+## R helper functions
+
+WebPPL ERPs are automatically turned into histograms. To recover samples from an ERP, you can use something like the following: 
+
+```
+histToSamples <- function(df, samples){
+  df[rep(row.names(df), df$probs*(samples)), 1:ncol(df)-1]
+}
+```
