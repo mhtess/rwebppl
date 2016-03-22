@@ -1,5 +1,7 @@
 # RWebPPL
 
+[![Travis-CI Build Status](https://travis-ci.org/mhtess/rwebppl.svg?branch=master)](https://travis-ci.org/mhtess/rwebppl)
+
 ## Installation
 
 To use rwebppl, you need to have [nodejs](https://nodejs.org/en/) installed.
