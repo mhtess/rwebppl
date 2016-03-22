@@ -16,7 +16,7 @@ install_webppl <- function() {
          ignore.stdout = TRUE, ignore.stderr = TRUE)
 }
 
-.onLoad <- function(libname, pkgname) {
+.onAttach <- function(libname, pkgname) {
   pkg_path <- system.file(package = "rwebppl")
   if (!file.exists(file.path(pkg_path, "package.json"))) {
     packageStartupMessage("webppl not found, installing...")
@@ -77,10 +77,13 @@ webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
     package_args <- ""
   }
   script_path <- system.file("js/rwebppl", package = "rwebppl")
-  output_string <- paste(
-    system2(script_path, args = c(f, package_args), stdout = TRUE),
-    collapse = ""
-  )
+  output_file = "/tmp/webppl_output"
+  if (file.exists(output_file)) {
+    file.remove(output_file)
+  }
+  system2(script_path, args = c(f, package_args), stdout = "", wait = FALSE)
+  while (!file.exists(output_file)) {Sys.sleep(1)}
+  output_string <- paste(readLines(output_file), collapse = "\n")
   if (output_string != "") {
     tidy_output(jsonlite::fromJSON(output_string))
   }

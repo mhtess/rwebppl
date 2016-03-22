@@ -20,10 +20,15 @@ function cutByBuffer(piecesSoFar, restOfStr, buff) {
 
 function printWebPPLValue(x) {
   var serialized_x = util.serialize(x);
-  var arrayed_x = cutByBuffer([], serialized_x, 8000);
-  arrayed_x.forEach(function(entry) {
-    console.log(entry);
-  })
+  fs.writeFile("/tmp/webppl_output", serialized_x + "\n", function(err) {
+    if (err) {
+        return console.log(err);
+    }
+  });
+  // var arrayed_x = cutByBuffer([], serialized_x, 8000);
+  // arrayed_x.forEach(function(entry) {
+  //   console.log(entry);
+  // })
 };
 
 function main() {
