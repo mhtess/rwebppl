@@ -26,6 +26,7 @@ install_webppl <- function() {
 
 tidy_output <- function(model_output) {
   if (!is.null(names(model_output)) &&
+      length(names(model_output)) == 2 &&
       all(names(model_output) == c("probs", "support"))) {
     data.frame(support = model_output$support,
                probs = model_output$probs)
