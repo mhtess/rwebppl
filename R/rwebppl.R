@@ -7,13 +7,7 @@
 #' \dontrun{install_webppl()}
 install_webppl <- function() {
   pkg_path <- system.file(package = "rwebppl")
-  system(sprintf("cd %s && \
-                 npm init -y . &>/dev/null && \
-                 npm install --save webppl &>/dev/null &&\
-                 cd node_modules/webppl &&\
-                 npm install &>/dev/null",
-                 pkg_path),
-         ignore.stdout = TRUE, ignore.stderr = TRUE)
+  system(sprintf("%s/install.sh %s", pkg_path, pkg_path))
 }
 
 .onAttach <- function(libname, pkgname) {
