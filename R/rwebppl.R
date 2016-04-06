@@ -1,6 +1,6 @@
 #' Install webppl
 #'
-#' @return
+#' @return NULL
 #' @export
 #'
 #' @examples
@@ -12,7 +12,7 @@ install_webppl <- function() {
 
 .onAttach <- function(libname, pkgname) {
   pkg_path <- system.file(package = "rwebppl")
-  if (!file.exists(file.path(pkg_path, "package.json"))) {
+  if (!file.exists(file.path(pkg_path, "node_modules"))) {
     packageStartupMessage("webppl not found, installing...")
     install_webppl()
   }
