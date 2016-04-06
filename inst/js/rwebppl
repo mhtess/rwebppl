@@ -55,7 +55,7 @@ function main() {
 	webppl.run(code, function(s,x) {
 	  printWebPPLValue(x);
 	}, {
-    extra: webppl_main.parsePackageCode(packages, false)
+    bundles: webppl_main.parsePackageCode(packages, false)
   })
 
 }
