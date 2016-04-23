@@ -38,6 +38,8 @@ webppl(model_file = "path/to/model/model.wppl",
        model_packages = c("projectUtils", "helpers"))
 ```
 
+## Passing data from R to WebPPL
+
 Data can be passed from R to WebPPL as in:
 
 ```
@@ -60,31 +62,32 @@ It will exist in WebPPL as a list of js objects e.g.
 
 ```
 [
-{
-  participant: 0,
-  condition: "A",
-  response: 0.4
-},
-{
-  participant: 0,
-  condition: "B",
-  response: 0.8
-},
-{
-  participant: 1,
-  condition: "A",
-  response: 0.2
-}, 
-...
+  {
+    participant: 0,
+    condition: "A",
+    response: 0.4
+  },
+  {
+    participant: 0,
+    condition: "B",
+    response: 0.8
+  },
+  {
+    participant: 1,
+    condition: "A",
+    response: 0.2
+  }, 
+  ...
 ]
 ```
 
 ## R helper functions
 
-WebPPL ERPs are automatically turned into histograms. To recover samples from an ERP, you can use something like the following: 
+WebPPL ERPs are automatically turned into histograms (values with probabilities associated with it). To recover samples from an ERP, you can use something like the following: 
 
 ```
+# expecting the final column to the the probability
 histToSamples <- function(df, samples){
-  df[rep(row.names(df), df$probs*(samples)), 1:ncol(df)-1]
+  df[rep(row.names(df), df[,tail(names(df),1)]*(samples)), 1:ncol(df)-1]
 }
 ```
