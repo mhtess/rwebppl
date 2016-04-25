@@ -4,8 +4,11 @@ Title: R interface to WebPPL
 Version: 0.1.0
 Authors@R: c(
   person("Mika", "Braginsky", email = "mika.br@gmail.com", role = "aut"),
-  person("Michael Henry", "Tessler", email = "mtessler@stanford.edu", role = c("cre", "aut")))
-Description: More about what it does (maybe more than one line)
+  person("Michael Henry", "Tessler", email = "mtessler@stanford.edu",
+         role = c("cre", "aut")))
+Description: rwebppl provides an R interface for using WebPPL, a web-based
+  probabilistic programming language. For more information on WebPPL, see
+  http://webppl.org.
 Depends:
     R (>= 3.2.3)
 License: GPL-3

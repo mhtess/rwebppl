@@ -15,14 +15,14 @@ function printWebPPLValue(x) {
   // creating the output file is atomic
   fs.writeFile("/tmp/webppl_output_tmp", serialized_x + "\n", function(err) {
     if (err) {
-      console.log(err);
-    //   fs.writeFile("/tmp/webppl_output_tmp", "");
-    }
-    fs.rename("/tmp/webppl_output_tmp", "/tmp/webppl_output", function(err) {
-      if (err) {
-        console.log(err);
-      }
-    });
+      console.error(err);
+    } else {
+      fs.rename("/tmp/webppl_output_tmp", "/tmp/webppl_output", function(err) {
+        if (err) {
+          console.error(err);
+        };
+      });
+    };
   });
 };
 
@@ -49,7 +49,7 @@ function main() {
   });
 
   webppl.run(code, function(s,x) {
-   printWebPPLValue(x);
+    printWebPPLValue(x);
   }, {
     bundles: webppl_main.parsePackageCode(packages, false)
   });

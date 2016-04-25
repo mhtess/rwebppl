@@ -1,3 +1,12 @@
+# Path to rwebppl R package
+rwebppl_path <- function() system.file(package = "rwebppl")
+
+# Path to webppl npm package
+webppl_path <- function() path.expand("~/.rwebppl")
+
+# Path to where webppl looks for webppl npm packages
+global_pkg_path <- function() path.expand("~/.webppl")
+
 #' Install webppl
 #'
 #' @return NULL
@@ -6,16 +15,43 @@
 #' @examples
 #' \dontrun{install_webppl()}
 install_webppl <- function() {
-  pkg_path <- system.file(package = "rwebppl")
-  system(sprintf("%s/install.sh %s", pkg_path, pkg_path))
+  system2(file.path(rwebppl_path(), "bash", "install.sh"),
+          args = c(webppl_path(), rwebppl_path()))
 }
 
 .onAttach <- function(libname, pkgname) {
-  pkg_path <- system.file(package = "rwebppl")
-  if (!file.exists(file.path(pkg_path, "node_modules"))) {
+  if (!file.exists(file.path(webppl_path(), "node_modules", "webppl"))) {
     packageStartupMessage("webppl not found, installing...")
     install_webppl()
   }
+}
+
+#' Install an npm package for webppl
+#'
+#' @param package_name Name of package to be installed
+#' @param path Path to package install location (defaults to webppl's global
+#'   package directory)
+#' @return NULL
+#' @export
+#'
+#' @examples
+#' \dontrun{install_webppl_package("babyparse")}
+install_webppl_package <- function(package_name, path = global_pkg_path()) {
+  system2(file.path(rwebppl_path(), "bash", "install_package.sh"),
+          args = c(path, package_name, rwebppl_path()))
+}
+
+#' Uninstall an npm package for webppl
+#'
+#' @inheritParams install_webppl_package
+#' @return NULL
+#' @export
+#'
+#' @examples
+#' \dontrun{uninstall_webppl_package("babyparse")}
+uninstall_webppl_package <- function(package_name, path = global_pkg_path()) {
+  system2(file.path(rwebppl_path(), "bash", "uninstall_package.sh"),
+          args = c(path, package_name))
 }
 
 tidy_output <- function(model_output) {
@@ -50,7 +86,8 @@ webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
                    data_var = NULL, model_packages = NULL) {
 
   # find location of rwebppl JS script, within rwebppl R package
-  script_path <- system.file("js/rwebppl", package = "rwebppl")
+  #script_path <- file.path(pkg_path(), "js", "rwebppl")
+  script_path <- file.path(webppl_path(), "rwebppl")
   packages <- model_packages
 
   # if data supplied, create a webppl package that exports the data as data_var
@@ -92,21 +129,37 @@ webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
     package_args <- ""
   }
 
-  # clear path where rwebppl JS script will write output
+  # clear paths where rwebppl JS script will write output or errors
   output_file = "/tmp/webppl_output"
   if (file.exists(output_file)) {
     file.remove(output_file)
+  }
+  error_file = "/tmp/webppl_error"
+  if (file.exists(error_file)) {
+    file.remove(error_file)
   }
 
   # run rwebppl JS script with model file and packages as arguments
   # any output to stdout gets sent to the R console while command runs
   system2(script_path, args = c(file_arg, package_args),
-          stdout = "", wait = FALSE)
+          stdout = "", stderr = error_file, wait = FALSE)
 
-  # wait for output file to exist, then collect and tidy results
-  while (!file.exists(output_file)) {Sys.sleep(1)}
-  output_string <- paste(readLines(output_file), collapse = "\n")
-  if (output_string != "") {
-    tidy_output(jsonlite::fromJSON(output_string))
+  # wait for output file or error file to exist
+  while (!(file.exists(output_file) ||
+           (file.exists(error_file) && file.info(error_file)$size != 0))) {
+    Sys.sleep(1)
+  }
+
+  # if the command produced an error, raise the error
+  if (file.exists(error_file) && file.info(error_file)$size != 0) {
+    stop(paste(readLines(error_file), collapse = "\n"))
+  }
+
+  # if the command produced output, collect and tidy the results
+  if (file.exists(output_file)) {
+    output_string <- paste(readLines(output_file), collapse = "\n")
+    if (output_string != "") {
+      return(tidy_output(jsonlite::fromJSON(output_string)))
+    }
   }
 }

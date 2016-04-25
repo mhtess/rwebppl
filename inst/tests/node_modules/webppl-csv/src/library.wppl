@@ -1,5 +1,0 @@
-// WebPPL code goes here
-
-var exampleWebpplFn = function(x) {
-  return x + 1;
-}
