@@ -2,10 +2,13 @@ language: r
 warnings_are_errors: true
 sudo: required
 env:
+  - TRAVIS_NODE_VERSION="4"
   global:
-  - NOT_CRAN=true
+    - NOT_CRAN=true
 before_install:
-- echo "options(repos = c(CRAN='http://cran.rstudio.com'))" > ~/.Rprofile
+  - echo "options(repos = c(CRAN='http://cran.rstudio.com'))" > ~/.Rprofile
+install:
+  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 after_success:
 r_binary_packages:
 notifications:
