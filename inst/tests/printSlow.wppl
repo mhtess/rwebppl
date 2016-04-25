@@ -1,0 +1,15 @@
+
+var output_file = "/tmp/webppl_output"
+var output_handle = webpplCsv.openFile(output_file)
+webpplCsv.writeLine(output_handle, "t,h,i,s")
+webpplCsv.writeLine(output_handle, "i,s,,a")
+
+var slowEnumerate = Enumerate(function(){
+	var a = repeat(18, function(x){return flip(0.5)})
+	return a
+})
+
+webpplCsv.writeLine(output_handle, "t,e,s,t")
+
+
+webpplCsv.closeFile(output_handle)
