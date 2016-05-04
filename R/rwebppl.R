@@ -57,9 +57,13 @@ uninstall_webppl_package <- function(package_name, path = global_pkg_path()) {
 tidy_output <- function(model_output) {
   if (!is.null(names(model_output)) &&
       length(names(model_output)) == 2 &&
-      all(names(model_output) == c("probs", "support"))) {
-    data.frame(support = model_output$support,
-               probs = model_output$probs)
+      all(names(model_output) %in% c("probs", "support"))) {
+    if (class(model_output$support) == "data.frame") {
+      support <- model_output$support
+    } else {
+      support <- data.frame(support = model_output$support)
+    }
+    cbind(support, data.frame(prob = model_output$probs))
   } else {
     model_output
   }
@@ -159,7 +163,7 @@ webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
   if (file.exists(output_file)) {
     output_string <- paste(readLines(output_file), collapse = "\n")
     if (output_string != "") {
-      return(tidy_output(jsonlite::fromJSON(output_string)))
+      return(tidy_output(jsonlite::fromJSON(output_string, flatten = TRUE)))
     }
   }
 }
