@@ -3,15 +3,9 @@ warnings_are_errors: true
 sudo: required
 env:
   global:
-    - NOT_CRAN=true
-  matrix:
-    - TRAVIS_NODE_VERSION="4"
+  - NOT_CRAN=true
 before_install:
-  - echo "options(repos = c(CRAN='http://cran.rstudio.com'))" > ~/.Rprofile
-install:
-  - Rscript -e 'if(!"devtools" %in% rownames(installed.packages())) install.packages("devtools", dependencies = TRUE)'
-  - Rscript -e 'devtools::install_deps(pkg=".", dependencies = TRUE)'
-  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
+- echo "options(repos = c(CRAN='http://cran.rstudio.com'))" > ~/.Rprofile
 after_success:
 r_binary_packages:
 notifications:
