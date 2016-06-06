@@ -17,5 +17,6 @@ BugReports: http://github.com/mhtess/rwebppl/issues
 LazyData: TRUE
 Imports:
     jsonlite
+    digest
 RoxygenNote: 5.0.1
 SystemRequirements: node
