@@ -4,7 +4,7 @@
 
 ## Installation
 
-To use rwebppl, you need to have [nodejs](https://nodejs.org/en/) installed.
+To use rwebppl, you need to have [`nodejs`](https://nodejs.org/en/) installed, as well as [`npm`](https://www.npmjs.com/) of version `>=3.8.0`.
 
 You can install rwebppl from GitHub using devtools:
 
@@ -43,12 +43,12 @@ webppl(model_file = "path/to/model/model.wppl",
 Data can be passed from R to WebPPL as in:
 
 ```
-webppl(my_model, 
-	   data = df, 
+webppl(my_model,
+	   data = df,
 	   data_var = "myDF")
 ```
 
-The data can be accessed in your WebPPL model under the name `myDF`. 
+The data can be accessed in your WebPPL model under the name `myDF`.
 
 If `df` looks like this in R:
 
@@ -76,14 +76,14 @@ It will exist in WebPPL as a list of js objects e.g.
     participant: 1,
     condition: "A",
     response: 0.2
-  }, 
+  },
   ...
 ]
 ```
 
 ## R helper functions
 
-WebPPL ERPs are automatically turned into histograms (values with probabilities associated with it). To recover samples from an ERP, you can use something like the following: 
+WebPPL ERPs are automatically turned into histograms (values with probabilities associated with it). To recover samples from an ERP, you can use something like the following:
 
 ```
 # expecting the final column to the the probability

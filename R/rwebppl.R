@@ -125,6 +125,11 @@ webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
     stop("supply one of model_code or model_file")
   }
 
+  # set output_arg to path to temporary file with a unique key
+  output_arg <- sprintf("/tmp/webppl_output_%s",
+                        digest::digest(as.character(Sys.time()), algo = "md5",
+                                       serialize = FALSE))
+
   # create --require argument out of each package name
   if (!is.null(packages)) {
     package_args <- unlist(lapply(packages,
@@ -134,18 +139,19 @@ webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
   }
 
   # clear paths where rwebppl JS script will write output or errors
-  output_file = "/tmp/webppl_output"
+  #output_file = "/tmp/webppl_output"
+  output_file <- output_arg
   if (file.exists(output_file)) {
     file.remove(output_file)
   }
-  error_file = "/tmp/webppl_error"
+  error_file <- "/tmp/webppl_error"
   if (file.exists(error_file)) {
     file.remove(error_file)
   }
 
   # run rwebppl JS script with model file and packages as arguments
   # any output to stdout gets sent to the R console while command runs
-  system2(script_path, args = c(file_arg, package_args),
+  system2(script_path, args = c(file_arg, output_arg, package_args),
           stdout = "", stderr = error_file, wait = FALSE)
 
   # wait for output file or error file to exist
