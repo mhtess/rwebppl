@@ -1,3 +1,5 @@
+
+
 # Path to rwebppl R package
 rwebppl_path <- function() system.file(package = "rwebppl")
 
@@ -80,14 +82,8 @@ tidy_output <- function(model_output) {
 #' @param data_var A name by which data can be referenced in the model.
 #' @param model_packages A character vector of external package names to use.
 #'
-#' @return The model's return value(s).
-#' @export
-#'
-#' @examples
-#' model_code <- "flip(0.5)"
-#' webppl(model_code)
-webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
-                   data_var = NULL, model_packages = NULL) {
+run_webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
+                       data_var = NULL, model_packages = NULL) {
 
   # find location of rwebppl JS script, within rwebppl R package
   #script_path <- file.path(pkg_path(), "js", "rwebppl")
@@ -126,9 +122,7 @@ webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
   }
 
   # set output_arg to path to temporary file with a unique key
-  output_arg <- sprintf("/tmp/webppl_output_%s",
-                        digest::digest(as.character(Sys.time()), algo = "md5",
-                                       serialize = FALSE))
+  output_arg <- sprintf("/tmp/webppl_output_%s", uuid::UUIDgenerate())
 
   # create --require argument out of each package name
   if (!is.null(packages)) {
@@ -172,4 +166,28 @@ webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
       return(tidy_output(jsonlite::fromJSON(output_string, flatten = TRUE)))
     }
   }
+}
+
+#' webppl
+#'
+#' Runs webppl model.
+#'
+#' @importFrom foreach "%dopar%"
+#' @inheritParams run_webppl
+#' @param chains Number of times to run model (defaults to 1).
+#' @param cores Number of cores to use when running multiple chains (defaults to
+#'   1).
+#'
+#' @return The model's return value(s).
+#' @export
+#'
+#' @examples
+#' model_code <- "flip(0.5)"
+#' webppl(model_code)
+webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
+                   data_var = NULL, model_packages = NULL, chains = 1,
+                   cores = 1) {
+  doParallel::registerDoParallel(cores = cores)
+  foreach::foreach(i = 1:chains) %dopar%
+    run_webppl(model_code, model_file, data, data_var, model_packages)
 }

@@ -1,7 +1,7 @@
 Package: rwebppl
 Type: Package
 Title: R interface to WebPPL
-Version: 0.1.9000
+Version: 0.1.9001
 Authors@R: c(
   person("Mika", "Braginsky", email = "mika.br@gmail.com", role = "aut"),
   person("Michael Henry", "Tessler", email = "mtessler@stanford.edu",
@@ -16,7 +16,9 @@ URL: https://github.com/mhtess/rwebppl
 BugReports: http://github.com/mhtess/rwebppl/issues
 LazyData: TRUE
 Imports:
-    jsonlite
-    digest
+    jsonlite,
+    uuid,
+    doParallel,
+    foreach
 RoxygenNote: 5.0.1
 SystemRequirements: node
