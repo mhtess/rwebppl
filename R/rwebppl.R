@@ -88,7 +88,8 @@ tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
       samples <- get_samples(tidied_output, num_samples)
       samples$Iteration <- 1:num_samples
       ggmcmc_samples <- tidyr::gather_(samples, "Parameter", "value",
-                                       names(samples)[names(samples) != "Iteration"])
+                                       names(samples)[names(samples) != "Iteration"],
+                                       factor_key = TRUE)
       ggmcmc_samples$Chain <- chain
 
       attr(ggmcmc_samples, "nChains") <- chains
