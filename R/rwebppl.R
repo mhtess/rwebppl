@@ -56,6 +56,16 @@ uninstall_webppl_package <- function(package_name, path = global_pkg_path()) {
           args = c(path, package_name))
 }
 
+#' get_samples
+#'
+#' Turn webppl "histogram" output into samples.
+#'
+#' @param df A data frame of webppl "histogram" output
+#' @param num_samples A number of samples to reconstruct
+#' @export
+#'
+#' @examples
+#' get_samples(df, 1000)
 get_samples <- function(df, num_samples) {
   rows <- rep.int(seq_len(nrow(df)), times = round(df$prob * num_samples))
   cols <- names(df) != "prob"
