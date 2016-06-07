@@ -82,7 +82,7 @@ tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
       ggmcmc_samples$Chain <- chain
 
       attr(ggmcmc_samples, "nChains") <- chains
-      attr(ggmcmc_samples, "nParameters") <- ncol(samples) - 2
+      attr(ggmcmc_samples, "nParameters") <- ncol(samples) - 1
       attr(ggmcmc_samples, "nIterations") <- inference_opts[["samples"]]
       attr(ggmcmc_samples, "nBurnin") <- inference_opts[["burn"]]
       attr(ggmcmc_samples, "nThin") <- inference_opts[["thin"]]
