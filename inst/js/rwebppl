@@ -9,7 +9,11 @@ var util = require('webppl/src/util');
 var pkg = require('webppl/src/pkg');
 
 function writeWebPPLValue(x, file) {
-  var serialized_x = util.serialize(x);
+  if (dists.isDist(x) && x.isContinuous) {
+    var serialized_x = util.serialize(x.toString());
+  } else {
+    var serialized_x = util.serialize(x);
+  }
   // write to a temporary file and then rename it to output file name, so that
   // creating the output file is atomic
   fs.writeFile(file + "_tmp", serialized_x + "\n", function(err) {
