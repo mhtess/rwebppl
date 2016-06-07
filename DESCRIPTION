@@ -19,6 +19,7 @@ Imports:
     jsonlite,
     uuid,
     doParallel,
-    foreach
+    foreach,
+    tidyr
 RoxygenNote: 5.0.1
 SystemRequirements: node

@@ -5,7 +5,8 @@
 \title{webppl}
 \usage{
 webppl(model_code = NULL, model_file = NULL, data = NULL,
-  data_var = NULL, model_packages = NULL, chains = 1, cores = 1)
+  data_var = NULL, model_packages = NULL, model_var = NULL,
+  inference_opts = NULL, chains = 1, cores = 1, ggmcmc = FALSE)
 }
 \arguments{
 \item{model_code}{A string of a webppl program.}
@@ -13,16 +14,23 @@ webppl(model_code = NULL, model_file = NULL, data = NULL,
 \item{model_file}{A file containing a webppl program.}
 
 \item{data}{A data frame (or other serializable object) that can be
-referenced in the model.}
+referenced in the program.}
 
-\item{data_var}{A name by which data can be referenced in the model.}
+\item{data_var}{A name by which data can be referenced in the program.}
 
 \item{model_packages}{A character vector of external package names to use.}
+
+\item{model_var}{The name by which the model be referenced in the program.}
+
+\item{inference_opts}{Options for inference
+(see http://webppl.readthedocs.io/en/master/inference.html)}
 
 \item{chains}{Number of times to run model (defaults to 1).}
 
 \item{cores}{Number of cores to use when running multiple chains (defaults to
 1).}
+
+\item{ggmcmc}{Logical indicating whether to transform output to ggmcmc format.}
 }
 \value{
 The model's return value(s).

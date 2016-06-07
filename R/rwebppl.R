@@ -56,7 +56,14 @@ uninstall_webppl_package <- function(package_name, path = global_pkg_path()) {
           args = c(path, package_name))
 }
 
-tidy_output <- function(model_output) {
+get_samples <- function(df, num_samples) {
+  rows <- rep.int(seq_len(nrow(df)), times = round(df$prob * num_samples))
+  cols <- names(df) != "prob"
+  df[rows, cols, drop = FALSE]
+}
+
+tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
+                        chain = NULL, inference_opts = NULL) {
   if (!is.null(names(model_output)) &&
       length(names(model_output)) == 2 &&
       all(names(model_output) %in% c("probs", "support"))) {
@@ -65,7 +72,25 @@ tidy_output <- function(model_output) {
     } else {
       support <- data.frame(support = model_output$support)
     }
-    cbind(support, data.frame(prob = model_output$probs))
+    tidied_output <- cbind(support, data.frame(prob = model_output$probs))
+    if (ggmcmc & !is.null(inference_opts) & !is.null(chain) & !is.null(chains)) {
+      num_samples <- inference_opts[["samples"]]
+      samples <- get_samples(tidied_output, num_samples)
+      samples$Iteration <- 1:num_samples
+      ggmcmc_samples <- tidyr::gather_(samples, "Parameter", "value",
+                                       names(samples)[names(samples) != "Iteration"])
+      ggmcmc_samples$Chain <- chain
+
+      attr(ggmcmc_samples, "nChains") <- chains
+      attr(ggmcmc_samples, "nParameters") <- ncol(samples) - 2
+      attr(ggmcmc_samples, "nIterations") <- inference_opts[["samples"]]
+      attr(ggmcmc_samples, "nBurnin") <- inference_opts[["burn"]]
+      attr(ggmcmc_samples, "nThin") <- inference_opts[["thin"]]
+      attr(ggmcmc_samples, "description") <- ""
+      ggmcmc_samples
+    } else {
+      tidied_output
+    }
   } else {
     model_output
   }
@@ -73,20 +98,26 @@ tidy_output <- function(model_output) {
 
 #' webppl
 #'
-#' Runs webppl model.
+#' Runs a webppl program.
 #'
 #' @param model_code A string of a webppl program.
 #' @param model_file A file containing a webppl program.
 #' @param data A data frame (or other serializable object) that can be
-#'   referenced in the model.
-#' @param data_var A name by which data can be referenced in the model.
+#'   referenced in the program.
+#' @param data_var A name by which data can be referenced in the program.
 #' @param model_packages A character vector of external package names to use.
-#'
+#' @param model_var The name by which the model be referenced in the program.
+#' @param inference_opts Options for inference
+#' (see http://webppl.readthedocs.io/en/master/inference.html)
+#' @param ggmcmc Logical indicating whether to transform output to ggmcmc format.
+#' @param chains Number of chains (this run is one chain).
+#' @param chain Chain number of this run.
 run_webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
-                       data_var = NULL, model_packages = NULL) {
+                       data_var = NULL, model_packages = NULL, model_var = NULL,
+                       inference_opts = NULL, ggmcmc = FALSE, chains = NULL,
+                       chain = 1) {
 
   # find location of rwebppl JS script, within rwebppl R package
-  #script_path <- file.path(pkg_path(), "js", "rwebppl")
   script_path <- file.path(webppl_path(), "rwebppl")
   packages <- model_packages
 
@@ -106,20 +137,34 @@ run_webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
     }
   }
 
-  # set file_arg to temporary file containing model_code or to mode_file
+  # set modified_model_code to model_code or to contents of mode_file
   if (!is.null(model_code)) {
     if (!is.null(model_file)) {
       warning("both model_code and model_file supplied, using model_code")
     }
-    cat(model_code, file = (file_arg <- tempfile()))
+    modified_model_code <- model_code
   } else if (!is.null(model_file)) {
     if (!file.exists(model_file)) {
       stop("model_file does not exist")
     }
-    file_arg <- model_file
+    modified_model_code <- paste(readLines(model_file), collapse = "\n")
   } else {
     stop("supply one of model_code or model_file")
   }
+
+  # if model_var and inference_opts supplied, add an Infer call to the program
+  if (!is.null(model_var) & !is.null(inference_opts)) {
+    modified_model_code <- paste(
+      modified_model_code,
+      sprintf("Infer(JSON.parse('%s'), %s)",
+              jsonlite::toJSON(inference_opts, auto_unbox = TRUE),
+              model_var),
+      collapse = "\n"
+    )
+  }
+
+  # write modified_model_code to temporary file and store its name in file_arg
+  cat(modified_model_code, file = (file_arg <- tempfile()))
 
   # set output_arg to path to temporary file with a unique key
   output_arg <- sprintf("/tmp/webppl_output_%s", uuid::UUIDgenerate())
@@ -163,7 +208,9 @@ run_webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
   if (file.exists(output_file)) {
     output_string <- paste(readLines(output_file), collapse = "\n")
     if (output_string != "") {
-      return(tidy_output(jsonlite::fromJSON(output_string, flatten = TRUE)))
+      output <- jsonlite::fromJSON(output_string, flatten = TRUE)
+      tidy_output(output, ggmcmc = ggmcmc, chains = chains, chain = chain,
+                  inference_opts = inference_opts)
     }
   }
 }
@@ -185,9 +232,29 @@ run_webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
 #' model_code <- "flip(0.5)"
 #' webppl(model_code)
 webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
-                   data_var = NULL, model_packages = NULL, chains = 1,
-                   cores = 1) {
-  doParallel::registerDoParallel(cores = cores)
-  foreach::foreach(i = 1:chains) %dopar%
-    run_webppl(model_code, model_file, data, data_var, model_packages)
+                   data_var = NULL, model_packages = NULL, model_var = NULL,
+                   inference_opts = NULL, chains = 1, cores = 1,
+                   ggmcmc = FALSE) {
+
+  run_fun <- function(k) run_webppl(model_code = model_code,
+                                    model_file = model_file,
+                                    data = data,
+                                    data_var = data_var,
+                                    model_packages = model_packages,
+                                    model_var = model_var,
+                                    inference_opts = inference_opts,
+                                    ggmcmc = ggmcmc,
+                                    chains = chains,
+                                    chain = k)
+  if (chains == 1) {
+    run_fun(1)
+  } else {
+    doParallel::registerDoParallel(cores = cores)
+    chain_outputs <- foreach::foreach(i = 1:chains) %dopar% run_fun(i)
+    if (ggmcmc) {
+      Reduce(rbind, chain_outputs)
+    } else {
+      chain_outputs
+    }
+  }
 }
