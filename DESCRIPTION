@@ -10,7 +10,7 @@ Description: rwebppl provides an R interface for using WebPPL, a web-based
   probabilistic programming language. For more information on WebPPL, see
   http://webppl.org.
 Depends:
-    R (>= 3.2.3)
+    R (>= 3.3.0)
 License: GPL-3
 URL: https://github.com/mhtess/rwebppl
 BugReports: http://github.com/mhtess/rwebppl/issues
