@@ -24,3 +24,12 @@ multi <- webppl(model_code = myModel, model_var = "model",
 ggmulti <- webppl(model_code = myModel, model_var = "model",
                 inference_opts = inference_opts, ggmcmc = TRUE,
                 chains = 4, cores = 4)
+
+model <- "
+  var model = function() {
+    var theta = flip(0.5)
+    return theta
+  }
+"
+
+df <- webppl(program_code = model, model_var = "model", inference_opts = list(method = "MCMC", samples = 100))

@@ -1,5 +1,3 @@
-
-
 # Path to rwebppl R package
 rwebppl_path <- function() system.file(package = "rwebppl")
 
@@ -10,6 +8,8 @@ webppl_path <- function() path.expand("~/.rwebppl")
 global_pkg_path <- function() path.expand("~/.webppl")
 
 #' Install webppl
+#'
+#' Create or update rwebppl's webppl installation.
 #'
 #' @return NULL
 #' @export
@@ -28,7 +28,9 @@ install_webppl <- function() {
   }
 }
 
-#' Install an npm package for webppl
+#' Install webppl package
+#'
+#' Install an npm package to webppl's global installation.
 #'
 #' @param package_name Name of package to be installed
 #' @param path Path to package install location (defaults to webppl's global
@@ -43,7 +45,9 @@ install_webppl_package <- function(package_name, path = global_pkg_path()) {
           args = c(path, package_name, rwebppl_path()))
 }
 
-#' Uninstall an npm package for webppl
+#' Uninstall webppl package
+#'
+#' Uninstall an npm package from webppl's global installation.
 #'
 #' @inheritParams install_webppl_package
 #' @return NULL
@@ -56,16 +60,29 @@ uninstall_webppl_package <- function(package_name, path = global_pkg_path()) {
           args = c(path, package_name))
 }
 
-#' get_samples
+#' Get samples
 #'
 #' Turn webppl "histogram" output into samples.
 #'
-#' @param df A data frame of webppl "histogram" output
-#' @param num_samples A number of samples to reconstruct
+#' @param df A data frame of webppl "histogram" output (has a column called
+#'   `prob` with probabilities, remaining columns are parameter values).
+#' @param num_samples A number of samples to reconstruct.
+#' @return Data frame of parameter values with number of rows equal to
+#'   `num_samples`.
 #' @export
 #'
 #' @examples
-#' get_samples(df, 1000)
+#' program <- "
+#'   var model = function() {
+#'     var theta = uniform(0, 1)
+#'     var x = flip(theta)
+#'     return x
+#'   }
+#' "
+#' num_samples <- 100
+#' df <- webppl(program_code = program, model_var = "model",
+#'              inference_opts = list(method = "MCMC", samples = num_samples))
+#' get_samples(df, num_samples)
 get_samples <- function(df, num_samples) {
   rows <- rep.int(seq_len(nrow(df)), times = round(df$prob * num_samples))
   cols <- names(df) != "prob"
@@ -111,26 +128,26 @@ tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
 #'
 #' Runs a webppl program.
 #'
-#' @param model_code A string of a webppl program.
-#' @param model_file A file containing a webppl program.
+#' @param program_code A string of a webppl program.
+#' @param program_file A file containing a webppl program.
 #' @param data A data frame (or other serializable object) that can be
 #'   referenced in the program.
 #' @param data_var A name by which data can be referenced in the program.
-#' @param model_packages A character vector of external package names to use.
+#' @param packages A character vector of external package names to use.
 #' @param model_var The name by which the model be referenced in the program.
 #' @param inference_opts Options for inference
 #' (see http://webppl.readthedocs.io/en/master/inference.html)
 #' @param ggmcmc Logical indicating whether to transform output to ggmcmc format.
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
-run_webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
-                       data_var = NULL, model_packages = NULL, model_var = NULL,
+run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
+                       data_var = NULL, packages = NULL, model_var = NULL,
                        inference_opts = NULL, ggmcmc = FALSE, chains = NULL,
                        chain = 1) {
 
   # find location of rwebppl JS script, within rwebppl R package
   script_path <- file.path(webppl_path(), "rwebppl")
-  packages <- model_packages
+  add_packages <- packages
 
   # if data supplied, create a webppl package that exports the data as data_var
   if (!is.null(data)) {
@@ -144,29 +161,29 @@ run_webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
       data_string <- jsonlite::toJSON(data)
       cat(sprintf("module.exports = JSON.parse('%s')", data_string),
           file = file.path(tmp_dir, data_var, "index.js"))
-      packages <- c(packages, file.path(tmp_dir, data_var))
+      add_packages <- c(add_packages, file.path(tmp_dir, data_var))
     }
   }
 
-  # set modified_model_code to model_code or to contents of mode_file
-  if (!is.null(model_code)) {
-    if (!is.null(model_file)) {
-      warning("both model_code and model_file supplied, using model_code")
+  # set modified_program_code to program_code or to contents of mode_file
+  if (!is.null(program_code)) {
+    if (!is.null(program_file)) {
+      warning("both program_code and program_file supplied, using program_code")
     }
-    modified_model_code <- model_code
-  } else if (!is.null(model_file)) {
-    if (!file.exists(model_file)) {
-      stop("model_file does not exist")
+    modified_program_code <- program_code
+  } else if (!is.null(program_file)) {
+    if (!file.exists(program_file)) {
+      stop("program_file does not exist")
     }
-    modified_model_code <- paste(readLines(model_file), collapse = "\n")
+    modified_program_code <- paste(readLines(program_file), collapse = "\n")
   } else {
-    stop("supply one of model_code or model_file")
+    stop("supply one of program_code or program_file")
   }
 
   # if model_var and inference_opts supplied, add an Infer call to the program
   if (!is.null(model_var) & !is.null(inference_opts)) {
-    modified_model_code <- paste(
-      modified_model_code,
+    modified_program_code <- paste(
+      modified_program_code,
       sprintf("Infer(JSON.parse('%s'), %s)",
               jsonlite::toJSON(inference_opts, auto_unbox = TRUE),
               model_var),
@@ -174,22 +191,21 @@ run_webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
     )
   }
 
-  # write modified_model_code to temporary file and store its name in file_arg
-  cat(modified_model_code, file = (file_arg <- tempfile()))
+  # write modified_program_code to temporary file and store its name in file_arg
+  cat(modified_program_code, file = (file_arg <- tempfile()))
 
   # set output_arg to path to temporary file with a unique key
   output_arg <- sprintf("/tmp/webppl_output_%s", uuid::UUIDgenerate())
 
   # create --require argument out of each package name
-  if (!is.null(packages)) {
-    package_args <- unlist(lapply(packages,
+  if (!is.null(add_packages)) {
+    package_args <- unlist(lapply(add_packages,
                                   function(x) paste("--require", x)))
   } else {
     package_args <- ""
   }
 
   # clear paths where rwebppl JS script will write output or errors
-  #output_file = "/tmp/webppl_output"
   output_file <- output_arg
   if (file.exists(output_file)) {
     file.remove(output_file)
@@ -226,32 +242,35 @@ run_webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
   }
 }
 
+# declare i as a global variable to avoid NOTE from foreach using NSE
+globalVariables("i")
+
 #' webppl
 #'
-#' Runs webppl model.
+#' Runs a webppl program.
 #'
 #' @importFrom foreach "%dopar%"
 #' @inheritParams run_webppl
-#' @param chains Number of times to run model (defaults to 1).
+#' @param chains Number of times to run the program (defaults to 1).
 #' @param cores Number of cores to use when running multiple chains (defaults to
 #'   1).
 #'
-#' @return The model's return value(s).
+#' @return The program's return value(s).
 #' @export
 #'
 #' @examples
-#' model_code <- "flip(0.5)"
-#' webppl(model_code)
-webppl <- function(model_code = NULL, model_file = NULL, data = NULL,
-                   data_var = NULL, model_packages = NULL, model_var = NULL,
+#' program_code <- "flip(0.5)"
+#' webppl(program_code)
+webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
+                   data_var = NULL, packages = NULL, model_var = NULL,
                    inference_opts = NULL, chains = 1, cores = 1,
                    ggmcmc = FALSE) {
 
-  run_fun <- function(k) run_webppl(model_code = model_code,
-                                    model_file = model_file,
+  run_fun <- function(k) run_webppl(program_code = program_code,
+                                    program_file = program_file,
                                     data = data,
                                     data_var = data_var,
-                                    model_packages = model_packages,
+                                    packages = packages,
                                     model_var = model_var,
                                     inference_opts = inference_opts,
                                     ggmcmc = ggmcmc,

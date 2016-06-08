@@ -1,7 +1,7 @@
 Package: rwebppl
 Type: Package
 Title: R interface to WebPPL
-Version: 0.1.9001
+Version: 0.1.9002
 Authors@R: c(
   person("Mika", "Braginsky", email = "mika.br@gmail.com", role = "aut"),
   person("Michael Henry", "Tessler", email = "mtessler@stanford.edu",
