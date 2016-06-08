@@ -12,15 +12,35 @@ You can install rwebppl from GitHub using devtools:
 devtools::install_github("mhtess/rwebppl")
 ```
 
+If WebPPL is not automatically installed, it can be installed used `install_webppl()`.
+
 ## Usage
+
+### Current list of function arguments and supported functionality
+
++ `model_code`: A string of a webppl program 
++ `model_file`: A file containing a webppl program
++ `data`: A data frame (or other serializable object) to be passed from R to the webppl program
++ `data_var`: A name by which the data can be referenced in the webppl program
++ `model_packages`: A character vector of names of external webppl package to use
++ `model_var`: When using inference opts, the name by which the model be referenced in the program.
++ `inference_opts`: A list with options for inference of a particular model in the program. (see http://webppl.readthedocs.io/en/master/inference.html)
++ `chains`: Number of times to run program (defaults to 1).
++ `cores`: Number of cores to use when running multiple chains (defaults to 1).
++ `ggmcmc`: Logical indicating whether to transform output into ggmcmc-ready format.
+
+### Examples
 
 Write a model as a string in R:
 
 ```
 my_model <- "
+var model = function () {
  var a = flip(0.3)
  var b = flip(0.6)
  return a + b
+}
+model()
 "
 webppl(my_model)
 ```
@@ -31,26 +51,42 @@ Or write a model in an external file:
 webppl(model_file = "path/to/model/model.wppl")
 ```
 
-You can also use WebPPL packages in more complex models:
+[WebPPL packages](http://webppl.readthedocs.io/en/master/packages.html) can be used in more complex models:
 
 ```
 webppl(model_file = "path/to/model/model.wppl",
        model_packages = c("projectUtils", "helpers"))
 ```
 
+NPM packages that ares used inside of WebPPL packages can be installed directly from RWebPPL e.g. `install_webppl_package("babyparse")`. They can also be uninstalled in the same way: `uninstall_webppl_package("babyparse")`
+
 ## Passing data from R to WebPPL
 
-Data can be passed from R to WebPPL as in:
+Data can be passed directly from R to WebPPL as in:
 
 ```
+my_model <- "
+var model = function () {
+ var a = flip(0.3)
+ var b = flip(0.6)
+ var scores = map( function(d) {
+ 	return a + b - d
+ }, myDF)
+ return scores
+}
+model()
+"
+
 webppl(my_model,
 	   data = df,
 	   data_var = "myDF")
 ```
 
-The data can be accessed in your WebPPL model under the name `myDF`.
+In this example, `myDF` is not defined inside the WebPPL program, but is passed into it from R, using `data = df`. The argument `data_var` tells WebPPL what the data should be called.
 
-If `df` looks like this in R:
+### Structure of data when passing
+
+If `myDF` looks like this in R:
 
 | Participant | Condition | Response |
 |-------------|-----------|----------|
@@ -79,15 +115,4 @@ It will exist in WebPPL as a list of js objects e.g.
   },
   ...
 ]
-```
-
-## R helper functions
-
-WebPPL ERPs are automatically turned into histograms (values with probabilities associated with it). To recover samples from an ERP, you can use something like the following:
-
-```
-# expecting the final column to the the probability
-histToSamples <- function(df, samples){
-  df[rep(row.names(df), df[,tail(names(df),1)]*(samples)), 1:ncol(df)-1]
-}
 ```
