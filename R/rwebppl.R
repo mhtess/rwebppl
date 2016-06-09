@@ -175,7 +175,8 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     if (!file.exists(program_file)) {
       stop("program_file does not exist")
     }
-    modified_program_code <- paste(readLines(program_file), collapse = "\n")
+    modified_program_code <- paste(readLines(program_file, warn = F), 
+                                   collapse = "\n")
   } else {
     stop("supply one of program_code or program_file")
   }
@@ -233,7 +234,8 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
   # if the command produced output, collect and tidy the results
   if (file.exists(output_file)) {
-    output_string <- paste(readLines(output_file), collapse = "\n")
+    output_string <- paste(readLines(output_file, warn = F), 
+                           collapse = "\n")
     if (output_string != "") {
       output <- jsonlite::fromJSON(output_string, flatten = TRUE)
       tidy_output(output, ggmcmc = ggmcmc, chains = chains, chain = chain,
