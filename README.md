@@ -18,11 +18,11 @@ If WebPPL is not automatically installed, it can be installed used `install_webp
 
 ### Current list of function arguments and supported functionality
 
-+ `model_code`: A string of a webppl program 
-+ `model_file`: A file containing a webppl program
++ `program_code`: A string of a webppl program 
++ `program_file`: A file containing a webppl program
 + `data`: A data frame (or other serializable object) to be passed from R to the webppl program
 + `data_var`: A name by which the data can be referenced in the webppl program
-+ `model_packages`: A character vector of names of external webppl package to use
++ `packages`: A character vector of names of external webppl package to use
 + `model_var`: When using inference opts, the name by which the model be referenced in the program.
 + `inference_opts`: A list with options for inference of a particular model in the program. (see http://webppl.readthedocs.io/en/master/inference.html)
 + `chains`: Number of times to run program (defaults to 1).
@@ -48,15 +48,17 @@ webppl(my_model)
 Or write a model in an external file:
 
 ```
-webppl(model_file = "path/to/model/model.wppl")
+webppl(program_file = "path/to/model/model.wppl")
 ```
 
 [WebPPL packages](http://webppl.readthedocs.io/en/master/packages.html) can be used in more complex models:
 
 ```
-webppl(model_file = "path/to/model/model.wppl",
-       model_packages = c("projectUtils", "helpers"))
+webppl(program_file = "path/to/model/model.wppl",
+       packages = c("linked-list", "timeit"))
 ```
+
+[List of useful packages.](https://github.com/probmods/webppl/wiki/Useful-packages)
 
 NPM packages that ares used inside of WebPPL packages can be installed directly from RWebPPL e.g. `install_webppl_package("babyparse")`. They can also be uninstalled in the same way: `uninstall_webppl_package("babyparse")`
 
