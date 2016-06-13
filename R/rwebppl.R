@@ -184,14 +184,15 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     stop("supply one of program_code or program_file")
   }
 
-  # if model_var and inference_opts supplied, add an Infer call to the program
-  if (!is.null(model_var) & !is.null(inference_opts)) {
+  # if inference_opts and model_var supplied, add an Infer call to the program
+  if (!is.null(inference_opts)) {
+    if (is.null(model_var)) {
+      stop("when supplying inference_opts, you must also supply model_var")
+    }
     infer <- sprintf("Infer(JSON.parse('%s'), %s)",
                      jsonlite::toJSON(inference_opts, auto_unbox = TRUE),
                      model_var)
-    modified_program_code <- paste(
-      modified_program_code, infer, sep = "\n"
-    )
+    modified_program_code <- paste(modified_program_code, infer, sep = "\n")
   }
 
   # write modified_program_code to temporary file and store its name in file_arg
