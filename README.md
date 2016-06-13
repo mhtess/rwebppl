@@ -23,11 +23,11 @@ If WebPPL is not automatically installed, it can be installed used `install_webp
 + `data`: A data frame (or other serializable object) to be passed from R to the webppl program
 + `data_var`: A name by which the data can be referenced in the webppl program
 + `packages`: A character vector of names of external webppl package to use
-+ `model_var`: When using inference opts, the name by which the model be referenced in the program.
-+ `inference_opts`: A list with options for inference of a particular model in the program. (see http://webppl.readthedocs.io/en/master/inference.html)
-+ `chains`: Number of times to run program (defaults to 1).
-+ `cores`: Number of cores to use when running multiple chains (defaults to 1).
-+ `ggmcmc`: Logical indicating whether to transform output into ggmcmc-ready format.
++ `model_var`: [*experimental*] When using inference opts, the name by which the model be referenced in the program.
++ `inference_opts`: [*experimental*] A list with options for inference of a particular model in the program. (see http://webppl.readthedocs.io/en/master/inference.html) 
++ `chains`: [*experimental*] Number of times to run program (defaults to 1).
++ `cores`: [*experimental*] Number of cores to use when running multiple chains (defaults to 1).
++ `ggmcmc`: [*experimental*] Logical indicating whether to transform output into ggmcmc-ready format.
 
 ### Examples
 
