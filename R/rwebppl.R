@@ -100,13 +100,16 @@ tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
       support <- data.frame(support = model_output$support)
     }
     tidied_output <- cbind(support, data.frame(prob = model_output$probs))
-    if (ggmcmc & !is.null(inference_opts) & !is.null(chain) & !is.null(chains)) {
+    if (ggmcmc & !is.null(inference_opts) & !is.null(chain) &
+        !is.null(chains)) {
       num_samples <- inference_opts[["samples"]]
       samples <- get_samples(tidied_output, num_samples)
       samples$Iteration <- 1:num_samples
-      ggmcmc_samples <- tidyr::gather_(samples, "Parameter", "value",
-                                       names(samples)[names(samples) != "Iteration"],
-                                       factor_key = TRUE)
+      ggmcmc_samples <- tidyr::gather_(
+        samples, key_col = "Parameter", value_col = "value",
+        gather_cols = names(samples)[names(samples) != "Iteration"],
+        factor_key = TRUE
+      )
       ggmcmc_samples$Chain <- chain
 
       attr(ggmcmc_samples, "nChains") <- chains
@@ -165,7 +168,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     }
   }
 
-  # set modified_program_code to program_code or to contents of mode_file
+  # set modified_program_code to program_code or to contents of program_file
   if (!is.null(program_code)) {
     if (!is.null(program_file)) {
       warning("both program_code and program_file supplied, using program_code")
@@ -175,7 +178,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     if (!file.exists(program_file)) {
       stop("program_file does not exist")
     }
-    modified_program_code <- paste(readLines(program_file, warn = F), 
+    modified_program_code <- paste(readLines(program_file, warn = FALSE),
                                    collapse = "\n")
   } else {
     stop("supply one of program_code or program_file")
@@ -183,12 +186,11 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
   # if model_var and inference_opts supplied, add an Infer call to the program
   if (!is.null(model_var) & !is.null(inference_opts)) {
+    infer <- sprintf("Infer(JSON.parse('%s'), %s)",
+                     jsonlite::toJSON(inference_opts, auto_unbox = TRUE),
+                     model_var)
     modified_program_code <- paste(
-      modified_program_code,
-      sprintf("Infer(JSON.parse('%s'), %s)",
-              jsonlite::toJSON(inference_opts, auto_unbox = TRUE),
-              model_var),
-      collapse = "\n"
+      modified_program_code, infer, sep = "\n"
     )
   }
 
@@ -234,7 +236,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
   # if the command produced output, collect and tidy the results
   if (file.exists(output_file)) {
-    output_string <- paste(readLines(output_file, warn = F), 
+    output_string <- paste(readLines(output_file, warn = F),
                            collapse = "\n")
     if (output_string != "") {
       output <- jsonlite::fromJSON(output_string, flatten = TRUE)

@@ -7,9 +7,8 @@ Authors@R: c(
          role = c("cre", "aut")),
   person("Michael Henry", "Tessler", email = "mtessler@stanford.edu",
          role = c("aut")))
-Description: rwebppl provides an R interface for using WebPPL, a web-based
-  probabilistic programming language. For more information on WebPPL, see
-  http://webppl.org.
+Description: An R interface for using WebPPL, a web-based probabilistic
+  programming language. For more information on WebPPL, see http://webppl.org.
 Depends:
     R (>= 3.3.0)
 License: GPL-3
