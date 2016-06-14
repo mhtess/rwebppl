@@ -89,7 +89,7 @@ get_samples <- function(df, num_samples) {
   df[rows, cols, drop = FALSE]
 }
 
-tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
+tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
                         chain = NULL, inference_opts = NULL) {
   if (!is.null(names(model_output)) &&
       length(names(model_output)) == 2) {
@@ -106,7 +106,7 @@ tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
     } else {
       tidied_output <- model_output
     }
-    if (ggmcmc & !is.null(inference_opts) & !is.null(chain) &
+    if (output_format=="ggmcmc" & !is.null(inference_opts) & !is.null(chain) &
         !is.null(chains)) {
       num_samples <- inference_opts[["samples"]]
       if (all(grepl("value", names(tidied_output)))) {
@@ -129,6 +129,14 @@ tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
       attr(ggmcmc_samples, "nThin") <- inference_opts[["thin"]]
       attr(ggmcmc_samples, "description") <- ""
       ggmcmc_samples
+    } else if (output_format=="samples" & !is.null(inference_opts)) {
+      num_samples <- inference_opts[["samples"]]
+      if (all(grepl("value", names(tidied_output)))) {
+        samples <- tidied_output
+      } else {
+        samples <- get_samples(tidied_output, num_samples)
+      }
+      samples
     } else {
       tidied_output
     }
@@ -150,12 +158,14 @@ tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
 #' @param model_var The name by which the model be referenced in the program.
 #' @param inference_opts Options for inference
 #' (see http://webppl.readthedocs.io/en/master/inference.html)
-#' @param ggmcmc Logical indicating whether to transform output to ggmcmc format.
+#' @param output_format An optional string indicating posterior output format:
+#' "webppl" probability table (default), "samples" for just the samples, 
+#' "ggmcmc" for use with ggmcmc package.
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
 run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                        data_var = NULL, packages = NULL, model_var = NULL,
-                       inference_opts = NULL, ggmcmc = FALSE, chains = NULL,
+                       inference_opts = NULL, output_format = "webppl", chains = NULL,
                        chain = 1) {
 
   # find location of rwebppl JS script, within rwebppl R package
@@ -251,8 +261,8 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                            collapse = "\n")
     if (output_string != "") {
       output <- jsonlite::fromJSON(output_string, flatten = TRUE)
-      tidy_output(output, ggmcmc = ggmcmc, chains = chains, chain = chain,
-                  inference_opts = inference_opts)
+      tidy_output(output, output_format = output_format, chains = chains, 
+                  chain = chain, inference_opts = inference_opts)
     }
   }
 }
@@ -279,7 +289,7 @@ globalVariables("i")
 webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                    data_var = NULL, packages = NULL, model_var = NULL,
                    inference_opts = NULL, chains = 1, cores = 1,
-                   ggmcmc = FALSE) {
+                   output_format = "webppl") {
 
   run_fun <- function(k) run_webppl(program_code = program_code,
                                     program_file = program_file,
@@ -288,7 +298,7 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                                     packages = packages,
                                     model_var = model_var,
                                     inference_opts = inference_opts,
-                                    ggmcmc = ggmcmc,
+                                    output_format = output_format,
                                     chains = chains,
                                     chain = k)
   if (chains == 1) {
@@ -296,7 +306,7 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
   } else {
     doParallel::registerDoParallel(cores = cores)
     chain_outputs <- foreach::foreach(i = 1:chains) %dopar% run_fun(i)
-    if (ggmcmc) {
+    if (output_format!="webppl") {
       Reduce(rbind, chain_outputs)
     } else {
       chain_outputs
