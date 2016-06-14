@@ -11,6 +11,8 @@ var pkg = require('webppl/src/pkg');
 function writeWebPPLValue(x, file) {
   if (dists.isDist(x) && x.isContinuous) {
     var serialized_x = util.serialize(x.toString());
+  } else if (dists.isDist(x) && x.samples) {
+    var serialized_x = util.serialize(x.samples);
   } else {
     var serialized_x = util.serialize(x);
   }

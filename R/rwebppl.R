@@ -92,18 +92,24 @@ get_samples <- function(df, num_samples) {
 tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
                         chain = NULL, inference_opts = NULL) {
   if (!is.null(names(model_output)) &&
-      length(names(model_output)) == 2 &&
-      all(names(model_output) %in% c("probs", "support"))) {
-    if (class(model_output$support) == "data.frame") {
-      support <- model_output$support
-    } else {
-      support <- data.frame(support = model_output$support)
-    }
-    tidied_output <- cbind(support, data.frame(prob = model_output$probs))
-    if (ggmcmc & !is.null(inference_opts) & !is.null(chain) &
-        !is.null(chains)) {
-      num_samples <- inference_opts[["samples"]]
+      length(names(model_output)) == 2) {
+    if (all(names(model_output) %in% c("probs", "support"))) {
+      if (class(model_output$support) == "data.frame") {
+        support <- model_output$support
+      } else {
+        support <- data.frame(support = model_output$support)
+      }
+      tidied_output <- cbind(support, data.frame(prob = model_output$probs))
       samples <- get_samples(tidied_output, num_samples)
+    } else if (all(names(model_output) %in% c("value", "score"))) {
+      samples <- model_output[, "value", drop = FALSE]
+      tidied_output <- samples
+    } else {
+      tidied_output <- model_output
+    }
+    if (ggmcmc & !is.null(samples) & !is.null(inference_opts) &
+        !is.null(chain) & !is.null(chains)) {
+      num_samples <- inference_opts[["samples"]]
       samples$Iteration <- 1:num_samples
       ggmcmc_samples <- tidyr::gather_(
         samples, key_col = "Parameter", value_col = "value",
