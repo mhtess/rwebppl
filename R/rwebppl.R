@@ -100,16 +100,20 @@ tidy_output <- function(model_output, ggmcmc = FALSE, chains = NULL,
         support <- data.frame(support = model_output$support)
       }
       tidied_output <- cbind(support, data.frame(prob = model_output$probs))
-      samples <- get_samples(tidied_output, num_samples)
-    } else if (all(names(model_output) %in% c("value", "score"))) {
-      samples <- model_output[, "value", drop = FALSE]
-      tidied_output <- samples
+    } else if ("score" %in% names(model_output)) {
+      tidied_output <- model_output[, names(model_output) != "score",
+                                    drop = FALSE]
     } else {
       tidied_output <- model_output
     }
-    if (ggmcmc & !is.null(samples) & !is.null(inference_opts) &
-        !is.null(chain) & !is.null(chains)) {
+    if (ggmcmc & !is.null(inference_opts) & !is.null(chain) &
+        !is.null(chains)) {
       num_samples <- inference_opts[["samples"]]
+      if (all(grepl("value", names(tidied_output)))) {
+        samples <- tidied_output
+      } else {
+        samples <- get_samples(tidied_output, num_samples)
+      }
       samples$Iteration <- 1:num_samples
       ggmcmc_samples <- tidyr::gather_(
         samples, key_col = "Parameter", value_col = "value",
