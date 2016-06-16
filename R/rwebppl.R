@@ -29,10 +29,10 @@ install_webppl <- function() {
 }
 
 .onAttach <- function(libname, pkgname) {
-  if (!file.exists(file.path(webppl_path(), "node_modules", "webppl"))) {
+  # if (!file.exists(file.path(webppl_path(), "node_modules", "webppl"))) {
     packageStartupMessage("webppl not found, installing...")
     install_webppl()
-  }
+  # }
 }
 
 #' Install webppl package
