@@ -2,7 +2,7 @@
 rwebppl_path <- function() system.file(package = "rwebppl")
 
 # Path to webppl npm package
-webppl_path <- function() path.expand("~/.rwebppl")
+webppl_path <- function() path.expand("/usr/local/lib/")
 
 # Path to where webppl looks for webppl npm packages
 global_pkg_path <- function() path.expand("~/.webppl")
@@ -17,22 +17,91 @@ global_pkg_path <- function() path.expand("~/.webppl")
 #' @examples
 #' \dontrun{install_webppl()}
 install_webppl <- function() {
-  webppl.exist <- suppressWarnings(system2("which",
-          args = c("webppl"), stdout = TRUE))
-  # if (is.null(attr(webppl.exist, "status"))) {
-    system2(file.path(rwebppl_path(), "bash", "install.sh"),
-            args = c(webppl_path(), rwebppl_path()))
-    print('yes')
-  # } else {
-    # print('hi')
-  # }
+  system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
+          args = c(webppl_path()))
 }
 
-.onAttach <- function(libname, pkgname) {
-  # if (!file.exists(file.path(webppl_path(), "node_modules", "webppl"))) {
+#' Symlink webppl
+#'
+#' Create a symlink to existing webppl install within rwebppl installation.
+#'
+#' @return NULL
+#' @export
+#'
+#' @examples
+#' \dontrun{link_webppl("/usr/local/lib/node_modules/webppl")}
+# Internal function to symlink webppl directory to common location
+link_webppl <- function(existingLoc) {
+  system2("ln", args = c("-s", existingLoc, 
+                         paste(c(webppl_path(), "rwebppl"), collapse = "")))
+}
+
+file_exists <- function(path) {
+  args <- c("!", "-e", path, ";", "echo", "$?")
+  existsFlag <- suppressWarnings(system2("test", args = args, stdout = T))
+  return(existsFlag == 1)
+}
+
+# Looks for webppl in common locations
+find_webppl <- function() {
+  binLoc <- suppressWarnings(system2("which", args = c("webppl"), stdout = TRUE))
+  
+  # If there's no binary on the machine, return null
+  if(!is.null(attr(binLoc, "status"))) {
+    return(NULL)
+  } else {
+    binPath <- strsplit(binLoc, split = "/")[[1]]
+    outerDir <- paste(binPath[1:length(binPath) - 1], collapse = "/")
+    outerDirName <- paste(binPath[length(binPath) - 1], collapse = "/")
+
+    # If in /bin, look for global npm install
+    if(outerDirName == "bin") {
+      return("/usr/local/lib/node_modules/webppl")
+    
+    # if the binary is inside a "webppl" directory, probably used git
+    } else if (outerDirName == "webppl") {
+      return(outerDir)
+    
+    # Otherwise just do a fresh install anyway
+    } else {
+      return(NULL)
+    }
+  }
+}
+
+# Internal function to check whether a user already has webppl installed
+check_webppl <- function() {
+  # Note: this will return the location of the binary if installed via npm
+  webppl.loc <- find_webppl()
+
+  # If it can't find webppl, install
+  if(is.null(webppl.loc)) {
     packageStartupMessage("webppl not found, installing...")
     install_webppl()
-  # }
+  } 
+
+  new.webppl.loc <- find_webppl()
+
+  symlink.exist <- file_exists(paste(c(webppl_path(), "rwebppl/webppl"), collapse = ""))
+  
+  if(!symlink.exist){
+    packageStartupMessage("creating symlink to ", webppl_path())
+    link_webppl(new.webppl.loc)
+  }
+}
+
+# Internal function to check whether the rwebppl binary is in the right place
+check_rwebpplSetup <- function() {
+  rwebppl.exist <- file_exists(paste(c(webppl_path(), "rwebppl"), collapse = ""))
+  if(!rwebppl.exist) {
+    system2(file.path(rwebppl_path(), "bash", "rwebppl-setup.sh"),
+            args = c(webppl_path(), rwebppl_path()))
+  }
+}
+
+.onLoad <- function(libname, pkgname) {
+  check_rwebpplSetup()
+  check_webppl()
 }
 
 #' Install webppl package
@@ -176,7 +245,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                        chain = 1) {
 
   # find location of rwebppl JS script, within rwebppl R package
-  script_path <- file.path(webppl_path(), "rwebppl")
+  script_path <- file.path(webppl_path(), "rwebppl/rwebppl")
   add_packages <- packages
 
   # if data supplied, create a webppl package that exports the data as data_var
