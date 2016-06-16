@@ -21,7 +21,7 @@ install_webppl <- function() {
           args = c("webppl"), stdout = TRUE))
   # if (is.null(attr(webppl.exist, "status"))) {
     system2(file.path(rwebppl_path(), "inst", "bash", "install2.sh"),
-            args = c(webppl_path(), rwebppl_path))
+            args = c(webppl_path(), rwebppl_path()))
     print('yes')
   # } else {
     # print('hi')
