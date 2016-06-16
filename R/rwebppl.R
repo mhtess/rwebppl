@@ -1,39 +1,18 @@
 # Path to rwebppl R package
 rwebppl_path <- function() system.file(package = "rwebppl")
 
-# Path to webppl npm package
-webppl_path <- function() path.expand("/usr/local/lib/")
-
 # Path to where webppl looks for webppl npm packages
 global_pkg_path <- function() path.expand("~/.webppl")
 
-#' Install webppl
-#'
-#' Create or update rwebppl's webppl installation.
-#'
-#' @return NULL
-#' @export
-#'
-#' @examples
-#' \dontrun{install_webppl()}
 install_webppl <- function() {
-  system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
-          args = c(webppl_path()))
+  print("installing webppl")
+  system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"))
 }
 
-#' Symlink webppl
-#'
-#' Create a symlink to existing webppl install within rwebppl installation.
-#'
-#' @return NULL
-#' @export
-#'
-#' @examples
-#' \dontrun{link_webppl("/usr/local/lib/node_modules/webppl")}
-# Internal function to symlink webppl directory to common location
 link_webppl <- function(existingLoc) {
+  print("linking webppl")
   system2("ln", args = c("-s", existingLoc, 
-                         paste(c(webppl_path(), "rwebppl"), collapse = "")))
+                         paste(c(rwebppl_path(), "js"), collapse = "/")))
 }
 
 file_exists <- function(path) {
@@ -76,31 +55,20 @@ check_webppl <- function() {
 
   # If it can't find webppl, install
   if(is.null(webppl.loc)) {
-    packageStartupMessage("webppl not found, installing...")
     install_webppl()
   } 
 
   new.webppl.loc <- find_webppl()
 
-  symlink.exist <- file_exists(paste(c(webppl_path(), "rwebppl/webppl"), collapse = ""))
+  symlink.exist <- file_exists(paste(c(rwebppl_path(), "js", "webppl"), 
+                                     collapse = "/"))
   
   if(!symlink.exist){
-    packageStartupMessage("creating symlink to ", webppl_path())
     link_webppl(new.webppl.loc)
   }
 }
 
-# Internal function to check whether the rwebppl binary is in the right place
-check_rwebpplSetup <- function() {
-  rwebppl.exist <- file_exists(paste(c(webppl_path(), "rwebppl"), collapse = ""))
-  if(!rwebppl.exist) {
-    system2(file.path(rwebppl_path(), "bash", "rwebppl-setup.sh"),
-            args = c(webppl_path(), rwebppl_path()))
-  }
-}
-
 .onLoad <- function(libname, pkgname) {
-  check_rwebpplSetup()
   check_webppl()
 }
 
@@ -245,7 +213,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                        chain = 1) {
 
   # find location of rwebppl JS script, within rwebppl R package
-  script_path <- file.path(webppl_path(), "rwebppl/rwebppl")
+  script_path <- file.path(rwebppl_path(), "js/rwebppl")
   add_packages <- packages
 
   # if data supplied, create a webppl package that exports the data as data_var
