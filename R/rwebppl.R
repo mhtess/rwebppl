@@ -20,7 +20,7 @@ install_webppl <- function() {
   webppl.exist <- suppressWarnings(system2("which",
           args = c("webppl"), stdout = TRUE))
   # if (is.null(attr(webppl.exist, "status"))) {
-    system2(file.path(rwebppl_path(), "inst", "bash", "install.sh"),
+    system2(file.path(rwebppl_path(), "bash", "install.sh"),
             args = c(webppl_path(), rwebppl_path()))
     print('yes')
   # } else {
