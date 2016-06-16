@@ -17,8 +17,14 @@ global_pkg_path <- function() path.expand("~/.webppl")
 #' @examples
 #' \dontrun{install_webppl()}
 install_webppl <- function() {
-  system2(file.path(rwebppl_path(), "bash", "install.sh"),
-          args = c(webppl_path(), rwebppl_path()))
+  webppl.exist <- suppressWarnings(system2("which",
+          args = c("webppl"), stdout = TRUE))
+  if (is.null(attr(webppl.exist, "status"))) {
+    system2(file.path(rwebppl_path, "inst", "bash", "install2.sh"),
+            args = c(webppl_path(), rwebppl_path))
+  } else {
+    print('hi')
+  }
 }
 
 .onAttach <- function(libname, pkgname) {
