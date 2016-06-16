@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-var parseArgs = require('minimist');
+var webppl = require('./webppl')
+var webppl_main = require('./webppl/src/main');
+var util = require('./webppl/src/util');
+var pkg = require('./webppl/src/pkg');
+var parseArgs = require('./webppl/node_modules/minimist');
 var path = require('path');
 var fs = require('fs');
-var webppl = require('webppl')
-var webppl_main = require('webppl/src/main');
-var util = require('webppl/src/util');
-var pkg = require('webppl/src/pkg');
 
 function writeWebPPLValue(x, file) {
   if (dists.isDist(x) && x.isContinuous) {
