@@ -4,6 +4,8 @@
 
 ## Installation
 
+RWebPPL requires R v3.3.0 or greater
+
 To use RWebPPL, you need to have [`nodejs`](https://nodejs.org/en/) installed, as well as [`npm`](https://www.npmjs.com/) of version `>=3.8.0`.
 
 N.B.: If you plan to use command-line WebPPL, in addition to RWebPPL, we advise you first [`npm install -g webppl`](http://webppl.readthedocs.io/en/master/quickstart.html) and then install RWebPPL.
