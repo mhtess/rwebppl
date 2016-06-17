@@ -4,15 +4,15 @@
 
 ## Installation
 
-RWebPPL requires R v3.3.0 or greater
 
-To use RWebPPL, you need to have [`nodejs`](https://nodejs.org/en/) installed, as well as [`npm`](https://www.npmjs.com/) of version `>=3.8.0`.
+#### System requirements
+
++ [R v3.3](https://cran.cnr.berkeley.edu) (in RStudio, type `version`)
++ [node](https://nodejs.org/en/) v4.4.5 or higher (in Terminal, type `node --version`; close and re-open terminal after install)
++ [npm](https://docs.npmjs.com/getting-started/installing-node) v3.6 or higher (in Terminal, type `npm --version`; if it's not >= v3.6; try `sudo npm install npm -g`, close and reopen terminal and check version)
++ devtools R library: in R: `install.packages('devtools')`
 
 N.B.: If you plan to use command-line WebPPL, in addition to RWebPPL, we advise you first [`npm install -g webppl`](http://webppl.readthedocs.io/en/master/quickstart.html) and then install RWebPPL.
-
-You can install RWebPPL from GitHub using devtools:
-
-If you do not already have the library devtools in R: run `install.packages("devtools")`
 
 ```
 devtools::install_github("mhtess/rwebppl")
