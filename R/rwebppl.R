@@ -6,7 +6,8 @@ global_pkg_path <- function() path.expand("~/.webppl")
 
 install_webppl <- function() {
   print("installing webppl")
-  system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"))
+  system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
+          args = rwebppl_path())
 }
 
 link_webppl <- function(existingLoc) {
@@ -52,19 +53,16 @@ find_webppl <- function() {
 check_webppl <- function() {
   # Note: this will return the location of the binary if installed via npm
   webppl.loc <- find_webppl()
-
-  # If it can't find webppl, install
-  if(is.null(webppl.loc)) {
-    install_webppl()
-  } 
-
-  new.webppl.loc <- find_webppl()
-
-  symlink.exist <- file_exists(paste(c(rwebppl_path(), "js", "webppl"), 
-                                     collapse = "/"))
-  
-  if(!symlink.exist){
-    link_webppl(new.webppl.loc)
+  localCopy.exist <- file_exists(paste(c(rwebppl_path(), "js", "webppl"), 
+                                       collapse = "/"))
+  print(localCopy.exist)
+  # If there's no local copy, symlink global if it exists; otherwise install locally
+  if(!localCopy.exist){
+    if(!is.null(webppl.loc)) {
+      link_webppl(webppl.loc)
+    } else {
+      install_webppl()
+    } 
   }
 }
 
