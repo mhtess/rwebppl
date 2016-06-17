@@ -12,6 +12,8 @@ N.B.: If you plan to use command-line WebPPL, in addition to RWebPPL, we advise 
 
 You can install RWebPPL from GitHub using devtools:
 
+If you do not already have the library devtools in R: run `install.packages("devtools")`
+
 ```
 devtools::install_github("mhtess/rwebppl")
 ```
