@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/mhtess/rwebppl/issues"
   },
+  "dependencies": {
+    "webppl" : "~0.7"
+  },
   "homepage": "https://github.com/mhtess/rwebppl#readme"
 }
