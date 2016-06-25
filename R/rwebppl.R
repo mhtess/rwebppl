@@ -21,13 +21,15 @@ install_webppl <- function() {
 #'
 #' @examples
 #' \dontrun{link_webppl()}
-link_webppl <- function(existingLoc = NULL) {
-  print("linking webppl")
-  if(is.null(existingLoc)) {
-    existingLoc = find_webppl()
-  }
+link_webppl <- function(existingLoc = find_webppl()) {
+  localPath = paste(c(rwebppl_path(), "js/webppl"), collapse = "/")
   if(!is.null(existingLoc)) {
-    system2("ln", args = c("-s", existingLoc, 
+    # Remove current install inside rwebppl directory
+    if(file_exists(localPath)) {
+      system2("rm", args = c("-r", localPath))
+    }
+    # Link given install to rwebppl directory
+    system2("ln", args = c("-s", existingLoc,
                            paste(c(rwebppl_path(), "js"), collapse = "/")))
   } else {
     print("couldn't find global installation to symlink: please provide location")
