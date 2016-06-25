@@ -4,10 +4,10 @@
 \alias{link_webppl}
 \title{Symlink global webppl install to rwebppl directory}
 \usage{
-link_webppl(existingLoc = NULL)
+link_webppl(globalLoc = find_webppl())
 }
 \arguments{
-\item{path}{Path to global webppl installation (defaults to npm root)}
+\item{globalLoc}{Path to global webppl installation (defaults to npm root)}
 }
 \description{
 If you installed webppl with rwebppl and later decided to install it globally, 
