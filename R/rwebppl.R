@@ -73,7 +73,7 @@ check_webppl <- function() {
   webppl.loc <- find_webppl()
   localCopy.exist <- file_exists(paste(c(rwebppl_path(), "js", "webppl"), 
                                        collapse = "/"))
-  # If there's no local copy, symlink global if it exists; otherwise install locally
+  # If already installed by RWebPPL, symlink global if it exists; otherwise install locally
   if(!localCopy.exist){
     if(!is.null(webppl.loc)) {
       link_webppl(webppl.loc)
