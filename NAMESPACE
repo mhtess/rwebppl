@@ -2,6 +2,7 @@
 
 export(get_samples)
 export(install_webppl_package)
+export(link_webppl)
 export(uninstall_webppl_package)
 export(webppl)
 importFrom(foreach,"%dopar%")
