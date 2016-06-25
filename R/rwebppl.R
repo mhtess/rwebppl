@@ -10,10 +10,28 @@ install_webppl <- function() {
           args = rwebppl_path())
 }
 
-link_webppl <- function(existingLoc) {
+#' Symlink global webppl install to rwebppl directory
+#'
+#' If you installed webppl with rwebppl and later decided to install it globally, 
+#' it's useful to replace the rwebppl install with a symlink to the global install
+#'
+#' @param path Path to global webppl installation (defaults to npm root)
+#' @return NULL
+#' @export
+#'
+#' @examples
+#' \dontrun{link_webppl()}
+link_webppl <- function(existingLoc = NULL) {
   print("linking webppl")
-  system2("ln", args = c("-s", existingLoc, 
-                         paste(c(rwebppl_path(), "js"), collapse = "/")))
+  if(is.null(existingLoc)) {
+    existingLoc = find_webppl()
+  }
+  if(!is.null(existingLoc)) {
+    system2("ln", args = c("-s", existingLoc, 
+                           paste(c(rwebppl_path(), "js"), collapse = "/")))
+  } else {
+    print("couldn't find global installation to symlink: please provide location")
+  }
 }
 
 file_exists <- function(path) {
