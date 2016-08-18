@@ -8,8 +8,33 @@ install_webppl <- function() {
   print("installing webppl")
   system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
           args = rwebppl_path())
+  system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
+          args = rwebppl_path())
 }
 
+#' Upgrade webppl installation
+#'
+#' Upgrades local (or symlinked) webppl installation to newest version allowed
+#' by rwebppl (currently 0.8.1)
+#'
+#' @return NULL
+#' @export
+#'
+#' @examples
+#' \dontrun{upgrade_webppl()}
+upgrade_webppl <- function() {
+  localPath = paste(c(rwebppl_path(), "js/webppl"), collapse = "/")
+  # If there's a global install, just upgrade that (and symlink will sync)
+  if(!is.null(find_webppl())) {
+    system2("npm", args = c("update", "-g", "webppl"))
+  # Otherwise, upgrade local installation
+  } else {
+    system2(file.path(rwebppl_path(), "bash", "upgrade-webppl.sh"),
+            args = rwebppl_path())
+    system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
+            args = rwebppl_path()) 
+  }
+}
 #' Symlink global webppl install to rwebppl directory
 #'
 #' If you installed webppl with rwebppl and later decided to install it globally, 

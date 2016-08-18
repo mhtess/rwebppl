@@ -4,15 +4,24 @@
 
 ## Installation
 
-To use rwebppl, you need to have [`nodejs`](https://nodejs.org/en/) installed, as well as [`npm`](https://www.npmjs.com/) of version `>=3.8.0`.
 
-You can install rwebppl from GitHub using devtools:
+#### System requirements
++ Mac or Linux OS [Windows currently not supported]
++ [R v3.3](https://cran.cnr.berkeley.edu) (in RStudio, type `version`)
++ [node](https://nodejs.org/en/) v4.4.5 or higher (in Terminal, type `node --version`; close and re-open terminal after install)
++ [npm](https://docs.npmjs.com/getting-started/installing-node) v3.6 or higher (in Terminal, type `npm --version`; if it's not >= v3.6; try `sudo npm install npm -g`, close and reopen terminal and check version)
++ devtools R library: in R: `install.packages('devtools')`
+
+N.B.: If you plan to use command-line WebPPL, in addition to RWebPPL, we advise you first [`npm install -g webppl`](http://webppl.readthedocs.io/en/master/quickstart.html) and then install RWebPPL.
 
 ```
 devtools::install_github("mhtess/rwebppl")
 ```
 
-If WebPPL is not automatically installed, it can be installed used `install_webppl()`.
+If you already have installed WebPPL using `npm install -g webppl`, then RWebPPL will link to your installed version.
+
+If you do not have WebPPL installed already, it will install it for you (into the R package directory).
+
 
 ## Usage
 
@@ -23,11 +32,12 @@ If WebPPL is not automatically installed, it can be installed used `install_webp
 + `data`: A data frame (or other serializable object) to be passed from R to the webppl program
 + `data_var`: A name by which the data can be referenced in the webppl program
 + `packages`: A character vector of names of external webppl package to use
-+ `model_var`: [*experimental*] When using inference opts, the name by which the model be referenced in the program.
-+ `inference_opts`: [*experimental*] A list with options for inference of a particular model in the program. (see http://webppl.readthedocs.io/en/master/inference.html) 
-+ `chains`: [*experimental*] Number of times to run program (defaults to 1).
-+ `cores`: [*experimental*] Number of cores to use when running multiple chains (defaults to 1).
-+ `ggmcmc`: [*experimental*] Logical indicating whether to transform output into ggmcmc-ready format.
++ `model_var`: When using inference opts, the name by which the model be referenced in the program.
++ `inference_opts`: A list with options for inference of a particular model in the program. (see http://webppl.readthedocs.io/en/master/inference.html) [N.B.: requires using `model_var`]
++ `output_format`: An optional string indicating posterior output format: "webppl" probability table (default), "samples" for just the samples, "ggmcmc" for use with [ggmcmc package](http://xavier-fim.net/packages/ggmcmc/). [N.B.: requires using `inference_opts` and `model_var`]
++ `chains`: Number of times to run program (defaults to 1).
++ `cores`: Number of cores to use when running multiple chains (defaults to 1).
+
 
 ### Examples
 
