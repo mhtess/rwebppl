@@ -85,8 +85,23 @@ check_webppl <- function() {
   }
 }
 
+#' Prints out version of webppl
+#'
+#' @return NULL
+#' @export
+#'
+#' @examples
+#' \dontrun{webppl_version()}
+webppl_version <- function() {
+  # Note: this will return the location of the binary if installed via npm
+  localCopy = paste(c(rwebppl_path(), "js", "webppl"), collapse = "/")
+  localCopy.exist <- file_exists(localCopy)
+  print(system2(localCopy, args = c("--version"), stdout = T))
+}
+
 .onLoad <- function(libname, pkgname) {
   check_webppl()
+  webppl_version()
 }
 
 #' Install webppl package
