@@ -20,7 +20,7 @@
     "url": "https://github.com/mhtess/rwebppl/issues"
   },
   "dependencies": {
-    "webppl" : "~0.9"
+    "webppl" : ">=0.9.0"
   },
   "homepage": "https://github.com/mhtess/rwebppl#readme"
 }
