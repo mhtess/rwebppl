@@ -5,11 +5,12 @@ rwebppl_path <- function() system.file(package = "rwebppl")
 global_pkg_path <- function() path.expand("~/.webppl")
 
 install_webppl <- function() {
-  print("installing webppl")
+  message("installing webppl ...", appendLF = FALSE)
   system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
           args = rwebppl_path())
   system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
           args = rwebppl_path())
+  message(" done")
 }
 
 #' Upgrade webppl installation
@@ -57,7 +58,7 @@ link_webppl <- function(globalLoc = find_webppl()) {
     system2("ln", args = c("-s", globalLoc,
                            paste(c(rwebppl_path(), "js"), collapse = "/")))
   } else {
-    print("couldn't find global installation to symlink: please provide location")
+    warning("couldn't find global installation to symlink: please provide location")
   }
 }
 
@@ -122,9 +123,9 @@ webppl_version <- function() {
   localCopy = paste(c(rwebppl_path(), "js", "webppl", "webppl"), collapse = "/")
   localCopy.exists <- file_exists(localCopy)
   if(localCopy.exists) {
-    print(system2(localCopy, args = c("--version"), stdout = T))  
+    message(paste("local webppl exists:", system2(localCopy, args = c("--version"), stdout = T)))
   } else {
-    print("couldn't find local webppl install/symlink")
+    warning("couldn't find local webppl install/symlink")
   }
 }
 
