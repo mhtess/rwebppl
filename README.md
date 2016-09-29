@@ -14,6 +14,8 @@
 
 N.B.: If you plan to use command-line WebPPL, in addition to RWebPPL, we advise you first [`npm install -g webppl`](http://webppl.readthedocs.io/en/master/quickstart.html) and then install RWebPPL.
 
+N.B.: If your node set-up depends on your environment variables, you may need to start rstudio from the terminal (rstudio does not otherwise load `.bashrc` files, for example).
+
 ```
 devtools::install_github("mhtess/rwebppl")
 ```
