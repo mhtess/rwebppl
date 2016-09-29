@@ -71,19 +71,23 @@ file_exists <- function(path) {
 # Looks for webppl in common locations
 find_webppl <- function() {
   binLoc <- suppressWarnings(system2("which", args = c("webppl"), stdout = TRUE))
-  
+
   # If there's no binary on the machine, return null
   if(!is.null(attr(binLoc, "status"))) {
     return(NULL)
   } else {
-    binPath <- strsplit(binLoc, split = "/")[[1]]
-    outerDir <- paste(binPath[1:length(binPath) - 1], collapse = "/")
-    outerDirName <- paste(binPath[length(binPath) - 1], collapse = "/")
+    outerDir <- dirname(dirname(binLoc))
+    outerDirName <- basename(dirname(binLoc))
 
     # If in /bin, look for global npm install
+    # follow a sym link or use npm root -g (with webppl at the end)
     if(outerDirName == "bin") {
-      return("/usr/local/lib/node_modules/webppl")
-    
+      nodeDir <- system2("npm", args = c("root -g"), stdout = T)
+      if(!is.null(attr(binLoc, "status"))) {
+        return(NULL)
+      } else {
+        return(file.path(nodeDir, "webppl"))
+      }
     # if the binary is inside a "webppl" directory, probably used git
     } else if (outerDirName == "webppl") {
       return(outerDir)
