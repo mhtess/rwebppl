@@ -324,7 +324,8 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
   cat(modified_program_code, file = (file_arg <- tempfile()))
 
   # set output_arg to path to temporary file with a unique key
-  output_arg <- sprintf("/tmp/webppl_output_%s", uuid::UUIDgenerate())
+  uid <- uuid::UUIDgenerate()
+  output_arg <- sprintf("/tmp/webppl_output_%s", uid)
 
   # create --require argument out of each package name
   if (!is.null(add_packages)) {
@@ -334,7 +335,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     package_args <- ""
   }
 
-  # clear paths where rwebppl JS script will write output or errors
+  # clear paths where rwebppl JS script will write output, errors, or finish file
   output_file <- output_arg
   if (file.exists(output_file)) {
     file.remove(output_file)
@@ -343,21 +344,20 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
   if (file.exists(error_file)) {
     file.remove(error_file)
   }
+  finish_file <- sprintf("/tmp/webppl_finished_%s", uid)
+  finish_arg <- finish_file
+  if (file.exists(finish_file)) {
+    file.remove(finish_file)
+  }
 
   # run rwebppl JS script with model file and packages as arguments
   # any output to stdout gets sent to the R console while command runs
-  system2(script_path, args = c(file_arg, output_arg, package_args),
-          stdout = "", stderr = error_file, wait = FALSE)
+  system2(script_path, args = c(file_arg, output_arg, finish_arg, package_args),
+          stdout = "", stderr = "", wait = FALSE)
 
   # wait for output file or error file to exist
-  while (!(file.exists(output_file) ||
-           (file.exists(error_file) && file.info(error_file)$size != 0))) {
-    Sys.sleep(1)
-  }
-
-  # if the command produced an error, raise the error
-  if (file.exists(error_file) && file.info(error_file)$size != 0) {
-    stop(paste(readLines(error_file), collapse = "\n"))
+  while (!(file.exists(finish_file))) {
+    Sys.sleep(0.25)
   }
 
   # if the command produced output, collect and tidy the results
