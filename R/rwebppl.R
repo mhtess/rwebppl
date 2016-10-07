@@ -5,11 +5,12 @@ rwebppl_path <- function() system.file(package = "rwebppl")
 global_pkg_path <- function() path.expand("~/.webppl")
 
 install_webppl <- function() {
-  print("installing webppl")
+  message("installing webppl ...", appendLF = FALSE)
   system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
           args = rwebppl_path())
   system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
           args = rwebppl_path())
+  message(" done")
 }
 
 #' Upgrade webppl installation
@@ -57,7 +58,7 @@ link_webppl <- function(globalLoc = find_webppl()) {
     system2("ln", args = c("-s", globalLoc,
                            paste(c(rwebppl_path(), "js"), collapse = "/")))
   } else {
-    print("couldn't find global installation to symlink: please provide location")
+    warning("couldn't find global installation to symlink: please provide location")
   }
 }
 
@@ -70,19 +71,23 @@ file_exists <- function(path) {
 # Looks for webppl in common locations
 find_webppl <- function() {
   binLoc <- suppressWarnings(system2("which", args = c("webppl"), stdout = TRUE))
-  
+
   # If there's no binary on the machine, return null
   if(!is.null(attr(binLoc, "status"))) {
     return(NULL)
   } else {
-    binPath <- strsplit(binLoc, split = "/")[[1]]
-    outerDir <- paste(binPath[1:length(binPath) - 1], collapse = "/")
-    outerDirName <- paste(binPath[length(binPath) - 1], collapse = "/")
+    outerDir <- dirname(dirname(binLoc))
+    outerDirName <- basename(dirname(binLoc))
 
     # If in /bin, look for global npm install
+    # follow a sym link or use npm root -g (with webppl at the end)
     if(outerDirName == "bin") {
-      return("/usr/local/lib/node_modules/webppl")
-    
+      nodeDir <- system2("npm", args = c("root -g"), stdout = T)
+      if(!is.null(attr(binLoc, "status"))) {
+        return(NULL)
+      } else {
+        return(file.path(nodeDir, "webppl"))
+      }
     # if the binary is inside a "webppl" directory, probably used git
     } else if (outerDirName == "webppl") {
       return(outerDir)
@@ -122,9 +127,9 @@ webppl_version <- function() {
   localCopy = paste(c(rwebppl_path(), "js", "webppl", "webppl"), collapse = "/")
   localCopy.exists <- file_exists(localCopy)
   if(localCopy.exists) {
-    print(system2(localCopy, args = c("--version"), stdout = T))  
+    message(paste("local webppl exists:", system2(localCopy, args = c("--version"), stdout = T)))
   } else {
-    print("couldn't find local webppl install/symlink")
+    warning("couldn't find local webppl install/symlink")
   }
 }
 
