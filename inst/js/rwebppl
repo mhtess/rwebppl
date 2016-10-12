@@ -62,4 +62,10 @@ function main() {
 
 }
 
-main();
+try {
+  main();
+} finally {
+  var argv = parseArgs(process.argv.slice(2));
+  var finishFile = argv._[2];
+  fs.writeFile(finishFile,  "");
+}
