@@ -142,17 +142,45 @@ get_samples <- function(df, num_samples) {
   df[rows, cols, drop = FALSE]
 }
 
+is_mcmc <- function(model_output) {
+  ((names(model_output)[1] == "score") & 
+    all(grepl("value", names(model_output)[2:length(names(model_output))])))
+}
+
+is_rejection <- function(model_output) {
+  all(grepl("value", names(model_output)))
+}
+
+is_probTable <- function(model_output){
+  all(names(model_output) %in% c("probs", "support"))
+}
+
+isOptimizeParams <- function(model_output){
+  (all(c("dims", "length") %in% names(model_output[[1]])) &&
+    all(c("dims", "length") %in% names(model_output[[length(model_output)]])))
+}
+
 tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
                         chain = NULL, inference_opts = NULL) {
-  if (!is.null(names(model_output)) &&
-      length(names(model_output)) == 2) {
-    if (all(names(model_output) %in% c("probs", "support"))) {
+  if (!is.null(names(model_output))) {
+    if (is_probTable(model_output)) {
       if (class(model_output$support) == "data.frame") {
         support <- model_output$support
       } else {
         support <- data.frame(support = model_output$support)
       }
       tidied_output <- cbind(support, data.frame(prob = model_output$probs))
+    } else if (is_mcmc(model_output)) {
+      tidied_output <- dplyr::select(model_output, -score)
+      names(tidied_output) <- gsub("value.", "", names(tidied_output))
+      tidied_output
+    } else if (is_rejection(model_output)) {
+      tidied_output <- model_output
+      names(tidied_output) <- gsub("value.", "", names(tidied_output))
+      tidied_output
+    } else if (isOptimizeParams(model_output)) {
+      tidied_output <- cbind(param = names(model_output), do.call("rbind", model_output))
+      rownames(tidied_output) <- seq(1, length(rownames(tidied_output)))
     } else if ("score" %in% names(model_output)) {
       tidied_output <- model_output[, names(model_output) != "score",
                                     drop = FALSE]
@@ -305,7 +333,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
   # wait for output file or error file to exist
   while (!(file.exists(finish_file))) {
-    Sys.sleep(0.25)
+    Sys.sleep(0.5)
   }
 
   # if the command produced output, collect and tidy the results
