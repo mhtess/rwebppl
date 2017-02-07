@@ -90,15 +90,3 @@ test_that("infer optimize returns df w correct rownames", {
     inference_opts = list(method = "optimize", samples = 100),
     model_var = "model")) == c("p", "q")))
 })
-
-test_that("optimize returns tidied df", {
-	expect_true(all(c("param", "dims", "length") %in% names(webppl('
-		var model = function() {
-			var p = uniform( {a:0, b:1} );
-      var q = uniform( {a:0, b:1} );
-      var theta = p*q;
-			observe(Binomial( {p : theta, n: 5 } ), 4)
-			return {p, q}
-    };
-    Optimize({model:model, steps: 100})')) ))
-})
