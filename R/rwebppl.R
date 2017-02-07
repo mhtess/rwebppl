@@ -171,7 +171,8 @@ tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
       }
       tidied_output <- cbind(support, data.frame(prob = model_output$probs))
     } else if (is_mcmc(model_output)) {
-      tidied_output <- dplyr::select(model_output, -score)
+      tidied_output <- model_output[, names(model_output) != "score",
+                                    drop = FALSE]
       names(tidied_output) <- gsub("value.", "", names(tidied_output))
       tidied_output
     } else if (is_rejection(model_output)) {
