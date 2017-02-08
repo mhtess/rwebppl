@@ -32,7 +32,7 @@ referenced in the program.}
 1).}
 
 \item{output_format}{An optional string indicating posterior output format:
-"webppl" probability table (default), "samples" for just the samples, 
+"webppl" probability table (default), "samples" for just the samples,
 "ggmcmc" for use with ggmcmc package.}
 }
 \value{

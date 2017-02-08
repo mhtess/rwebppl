@@ -4,8 +4,14 @@ rwebppl_path <- function() system.file(package = "rwebppl")
 # Path to where webppl looks for webppl npm packages
 global_pkg_path <- function() path.expand("~/.webppl")
 
-install_webppl <- function() {
+install_webppl <- function(webppl_version) {
   message("installing webppl ...", appendLF = FALSE)
+  rwebppl_json <- file.path(rwebppl_path(), "json", "rwebppl.json")
+  rwebppl_meta <- jsonlite::fromJSON(readLines(rwebppl_json))
+  rwebppl_meta$dependencies$webppl <- webppl_version
+  webppl_json <- file.path(rwebppl_path(), "js", "package.json")
+  writeLines(jsonlite::toJSON(rwebppl_meta, auto_unbox = TRUE, pretty = TRUE),
+             webppl_json)
   system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
           args = rwebppl_path())
   system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
@@ -33,12 +39,12 @@ upgrade_webppl <- function() {
     system2(file.path(rwebppl_path(), "bash", "upgrade-webppl.sh"),
             args = rwebppl_path())
     system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
-            args = rwebppl_path()) 
+            args = rwebppl_path())
   }
 }
 #' Symlink global webppl install to rwebppl directory
 #'
-#' If you installed webppl with rwebppl and later decided to install it globally, 
+#' If you installed webppl with rwebppl and later decided to install it globally,
 #' it's useful to replace the rwebppl install with a symlink to the global install
 #'
 #' @param globalLoc Path to global webppl installation (defaults to npm root)
@@ -91,7 +97,7 @@ find_webppl <- function() {
     # if the binary is inside a "webppl" directory, probably used git
     } else if (outerDirName == "webppl") {
       return(outerDir)
-    
+
     # Otherwise just do a fresh install anyway
     } else {
       return(NULL)
@@ -103,15 +109,16 @@ find_webppl <- function() {
 check_webppl <- function() {
   # Note: this will return the location of the binary if installed via npm
   webppl.loc <- find_webppl()
-  localCopy.exist <- file_exists(paste(c(rwebppl_path(), "js", "webppl"), 
+  localCopy.exist <- file_exists(paste(c(rwebppl_path(), "js", "webppl"),
                                        collapse = "/"))
   # If already installed by RWebPPL, symlink global if it exists; otherwise install locally
-  if(!localCopy.exist){
-    if(!is.null(webppl.loc)) {
+  if (!localCopy.exist) {
+    if (!is.null(webppl.loc)) {
       link_webppl(webppl.loc)
     } else {
-      install_webppl()
-    } 
+      webppl_version <- packageDescription("rwebppl", fields = "WebPPLVersion")
+      install_webppl(webppl_version)
+    }
   }
 }
 
@@ -121,12 +128,12 @@ check_webppl <- function() {
 #' @export
 #'
 #' @examples
-#' \dontrun{webppl_version()}
-webppl_version <- function() {
+#' \dontrun{get_webppl_version()}
+get_webppl_version <- function() {
   # Note: this will return the location of the binary if installed via npm
   localCopy = paste(c(rwebppl_path(), "js", "webppl", "webppl"), collapse = "/")
   localCopy.exists <- file_exists(localCopy)
-  if(localCopy.exists) {
+  if (localCopy.exists) {
     message(paste("local webppl exists:", system2(localCopy, args = c("--version"), stdout = T)))
   } else {
     warning("couldn't find local webppl install/symlink")
@@ -135,7 +142,7 @@ webppl_version <- function() {
 
 .onLoad <- function(libname, pkgname) {
   check_webppl()
-  webppl_version()
+  get_webppl_version()
 }
 
 #' Install webppl package
@@ -269,7 +276,7 @@ tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
 #' @param inference_opts Options for inference
 #' (see http://webppl.readthedocs.io/en/master/inference.html)
 #' @param output_format An optional string indicating posterior output format:
-#' "webppl" probability table (default), "samples" for just the samples, 
+#' "webppl" probability table (default), "samples" for just the samples,
 #' "ggmcmc" for use with ggmcmc package.
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
@@ -371,7 +378,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                            collapse = "\n")
     if (output_string != "") {
       output <- jsonlite::fromJSON(output_string, flatten = TRUE)
-      tidy_output(output, output_format = output_format, chains = chains, 
+      tidy_output(output, output_format = output_format, chains = chains,
                   chain = chain, inference_opts = inference_opts)
     }
   }

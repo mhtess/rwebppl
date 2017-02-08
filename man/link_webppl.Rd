@@ -10,7 +10,7 @@ link_webppl(globalLoc = find_webppl())
 \item{globalLoc}{Path to global webppl installation (defaults to npm root)}
 }
 \description{
-If you installed webppl with rwebppl and later decided to install it globally, 
+If you installed webppl with rwebppl and later decided to install it globally,
 it's useful to replace the rwebppl install with a symlink to the global install
 }
 \examples{
