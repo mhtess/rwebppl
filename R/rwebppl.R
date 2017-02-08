@@ -211,14 +211,6 @@ tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
       attr(ggmcmc_samples, "nThin") <- inference_opts[["thin"]]
       attr(ggmcmc_samples, "description") <- ""
       ggmcmc_samples
-    } else if (output_format=="samples" & !is.null(inference_opts)) {
-      num_samples <- inference_opts[["samples"]]
-      if (all(grepl("value", names(tidied_output)))) {
-        samples <- tidied_output
-      } else {
-        samples <- get_samples(tidied_output, num_samples)
-      }
-      samples
     } else {
       tidied_output
     }
@@ -241,7 +233,7 @@ tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
 #' @param inference_opts Options for inference
 #' (see http://webppl.readthedocs.io/en/master/inference.html)
 #' @param output_format An optional string indicating posterior output format:
-#' "webppl" probability table (default), "samples" for just the samples,
+#' "webppl" probability table for enumeration; samples otherwise (default) or
 #' "ggmcmc" for use with ggmcmc package.
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
@@ -334,7 +326,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
   # wait for output file or error file to exist
   while (!(file.exists(finish_file))) {
-    Sys.sleep(0.5)
+    Sys.sleep(0.25)
   }
 
   # if the command produced output, collect and tidy the results
