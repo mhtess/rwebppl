@@ -191,21 +191,16 @@ tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
     if (output_format=="ggmcmc" & !is.null(inference_opts) & !is.null(chain) &
         !is.null(chains)) {
       num_samples <- inference_opts[["samples"]]
-      if (all(grepl("value", names(tidied_output)))) {
-        samples <- tidied_output
-      } else {
-        samples <- get_samples(tidied_output, num_samples)
-      }
-      samples$Iteration <- 1:num_samples
+      tidied_output$Iteration <- 1:num_samples # should be replaced with actual iteration
       ggmcmc_samples <- tidyr::gather_(
-        samples, key_col = "Parameter", value_col = "value",
-        gather_cols = names(samples)[names(samples) != "Iteration"],
+        tidied_output, key_col = "Parameter", value_col = "value",
+        gather_cols = names(tidied_output)[names(tidied_output) != "Iteration"],
         factor_key = TRUE
       )
       ggmcmc_samples$Chain <- chain
 
       attr(ggmcmc_samples, "nChains") <- chains
-      attr(ggmcmc_samples, "nParameters") <- ncol(samples) - 1
+      attr(ggmcmc_samples, "nParameters") <- ncol(tidied_output) - 1
       attr(ggmcmc_samples, "nIterations") <- inference_opts[["samples"]]
       attr(ggmcmc_samples, "nBurnin") <- inference_opts[["burn"]]
       attr(ggmcmc_samples, "nThin") <- inference_opts[["thin"]]
