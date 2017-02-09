@@ -6,8 +6,7 @@
 \usage{
 run_webppl(program_code = NULL, program_file = NULL, data = NULL,
   data_var = NULL, packages = NULL, model_var = NULL,
-  inference_opts = NULL, output_format = "webppl", chains = NULL,
-  chain = 1)
+  inference_opts = NULL, chains = NULL, chain = 1)
 }
 \arguments{
 \item{program_code}{A string of a webppl program.}
@@ -25,10 +24,6 @@ referenced in the program.}
 
 \item{inference_opts}{Options for inference
 (see http://webppl.readthedocs.io/en/master/inference.html)}
-
-\item{output_format}{An optional string indicating posterior output format:
-"webppl" probability table (default), "samples" for just the samples, 
-"ggmcmc" for use with ggmcmc package.}
 
 \item{chains}{Number of chains (this run is one chain).}
 
