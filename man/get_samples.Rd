@@ -20,16 +20,8 @@ Data frame of parameter values with number of rows equal to
 Turn webppl "histogram" output into samples.
 }
 \examples{
-program <- "
-  var model = function() {
-    var theta = uniform(0, 1)
-    var x = flip(theta)
-    return x
-  }
-"
-num_samples <- 100
-df <- webppl(program_code = program, model_var = "model",
-             inference_opts = list(method = "MCMC", samples = num_samples))
+num_samples <- 10
+df <- data.frame(prob = c(0.1, 0.3, 0.5, 0.1), support = c("a","b","c","d"))
 get_samples(df, num_samples)
 }
 
