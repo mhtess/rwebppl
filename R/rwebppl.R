@@ -190,6 +190,7 @@ uninstall_webppl_package <- function(package_name, path = global_pkg_path()) {
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' program <- "
 #'   var model = function() {
 #'     var theta = uniform(0, 1)
@@ -201,6 +202,7 @@ uninstall_webppl_package <- function(package_name, path = global_pkg_path()) {
 #' df <- webppl(program_code = program, model_var = "model",
 #'              inference_opts = list(method = "MCMC", samples = num_samples))
 #' get_samples(df, num_samples)
+#' }
 get_samples <- function(df, num_samples) {
   rows <- rep.int(seq_len(nrow(df)), times = round(df$prob * num_samples))
   cols <- names(df) != "prob"
