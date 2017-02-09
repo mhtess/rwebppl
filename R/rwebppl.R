@@ -6,14 +6,22 @@ global_pkg_path <- function() path.expand("~/.webppl")
 
 install_webppl <- function(webppl_version) {
   message("installing webppl ...", appendLF = FALSE)
-  rwebppl_json <- file.path(rwebppl_path(), "json", "rwebppl.json")
-  rwebppl_meta <- jsonlite::fromJSON(readLines(rwebppl_json))
-  rwebppl_meta$dependencies$webppl <- webppl_version
-  webppl_json <- file.path(rwebppl_path(), "js", "package.json")
-  writeLines(jsonlite::toJSON(rwebppl_meta, auto_unbox = TRUE, pretty = TRUE),
-             webppl_json)
-  system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
-          args = rwebppl_path())
+  npm_info <- system2("npm", args = c("info", "webppl", "versions", "--json"),
+                      stdout = TRUE)
+  npm_versions <- jsonlite::fromJSON(paste(npm_info, collapse = ""))
+  if (webppl_version %in% npm_versions) {
+    rwebppl_json <- file.path(rwebppl_path(), "json", "rwebppl.json")
+    rwebppl_meta <- jsonlite::fromJSON(readLines(rwebppl_json))
+    rwebppl_meta$dependencies$webppl <- webppl_version
+    webppl_json <- file.path(rwebppl_path(), "js", "package.json")
+    writeLines(jsonlite::toJSON(rwebppl_meta, auto_unbox = TRUE, pretty = TRUE),
+               webppl_json)
+    system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
+            args = rwebppl_path())
+  } else {
+    system2(file.path(rwebppl_path(), "bash", "install-dev-webppl.sh"),
+            args = c(rwebppl_path(), webppl_version))
+  }
   system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
           args = rwebppl_path())
   message(" done")
