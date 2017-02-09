@@ -14,7 +14,7 @@ test_that("enumerate returns probability table", {
     model_var = "model")) == c("p", "q", "prob")))
 })
 
-test_that("rejection returns df w correct rownames", {
+test_that("rejection returns tidy df", {
 	expect_true(all(names(webppl('
 		var model = function() {
 			var p = uniform( {a:0, b:1} );
@@ -24,10 +24,10 @@ test_that("rejection returns df w correct rownames", {
 			return {p, q}
 		}',
     inference_opts = list(method = "rejection", samples = 100),
-    model_var = "model")) == c("p", "q")))
+    model_var = "model")) == c("Iteration", "Chain", "Parameter", "value")))
 })
 
-test_that("MCMC returns df w correct rownames", {
+test_that("MCMC returns tidy df", {
 	expect_true(all(names(webppl('
 		var model = function() {
 			var p = uniform( {a:0, b:1} );
@@ -37,10 +37,10 @@ test_that("MCMC returns df w correct rownames", {
 			return {p, q}
       }',
       inference_opts = list(method = "MCMC", samples = 100),
-      model_var = "model")) == c("p", "q")))
+			model_var = "model")) == c("Iteration", "Chain", "Parameter", "value")))
 })
 
-test_that("incrementalMH returns df w correct rownames", {
+test_that("incrementalMH returns tidy df", {
 	expect_true(all(names(webppl('
 		var model = function() {
 			var p = uniform( {a:0, b:1} );
@@ -50,10 +50,10 @@ test_that("incrementalMH returns df w correct rownames", {
 			return {p, q}
       }',
     inference_opts = list(method = "incrementalMH", samples = 100),
-    model_var = "model")) == c("p", "q")))
+		model_var = "model")) == c("Iteration", "Chain", "Parameter", "value")))
 })
 
-test_that("forward returns df w correct rownames", {
+test_that("forward returns tidy df", {
 	expect_true(all(names(webppl('
 		var model = function() {
 			var p = uniform( {a:0, b:1} );
@@ -62,10 +62,10 @@ test_that("forward returns df w correct rownames", {
 			return {p, q}
       }',
     inference_opts = list(method = "forward", samples = 100),
-    model_var = "model")) == c("p", "q")))
+		model_var = "model")) == c("Iteration", "Chain", "Parameter", "value")))
 })
 
-test_that("SMC returns df w correct rownames", {
+test_that("SMC returns tidy df", {
 	expect_true(all(names(webppl('
 		var model = function() {
 			var p = uniform( {a:0, b:1} );
@@ -75,10 +75,10 @@ test_that("SMC returns df w correct rownames", {
 			return {p, q}
     }',
     inference_opts = list(method = "SMC", particles = 100),
-    model_var = "model")) == c("p", "q")))
+		model_var = "model")) == c("Iteration", "Chain", "Parameter", "value")))
 })
 
-test_that("infer optimize returns df w correct rownames", {
+test_that("infer optimize returns tidy df", {
 	expect_true(all(names(webppl('
 		var model = function() {
 			var p = uniform( {a:0, b:1} );
@@ -88,5 +88,5 @@ test_that("infer optimize returns df w correct rownames", {
 			return {p, q}
     }',
     inference_opts = list(method = "optimize", samples = 100),
-    model_var = "model")) == c("p", "q")))
+		model_var = "model")) == c("Iteration", "Chain", "Parameter", "value")))
 })
