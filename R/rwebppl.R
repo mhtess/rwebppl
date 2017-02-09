@@ -116,7 +116,8 @@ check_webppl <- function() {
     if (!is.null(webppl.loc)) {
       link_webppl(webppl.loc)
     } else {
-      webppl_version <- packageDescription("rwebppl", fields = "WebPPLVersion")
+      webppl_version <- utils::packageDescription("rwebppl",
+                                                  fields = "WebPPLVersion")
       install_webppl(webppl_version)
     }
   }
