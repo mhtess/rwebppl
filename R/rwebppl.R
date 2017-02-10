@@ -1,9 +1,20 @@
 # Path to rwebppl R package
 rwebppl_path <- function() system.file(package = "rwebppl")
 
+# Path to local webppl install
+webppl_path = function() paste(c(rwebppl_path(), "js", "webppl", "webppl"), collapse = "/")
+
 # Path to where webppl looks for webppl npm packages
 global_pkg_path <- function() path.expand("~/.webppl")
 
+# Internal function that checks whether a file exists
+file_exists <- function(path) {
+  args <- c("!", "-e", path, ";", "echo", "$?")
+  existsFlag <- suppressWarnings(system2("test", args = args, stdout = T))
+  return(existsFlag == 1)
+}
+
+# TODO: add docs for install_webppl()
 install_webppl <- function(webppl_version) {
   message("installing webppl ...", appendLF = FALSE)
   npm_info <- system2("npm", args = c("info", "webppl", "versions", "--json"),
@@ -27,107 +38,12 @@ install_webppl <- function(webppl_version) {
   message(" done")
 }
 
-#' Upgrade webppl installation
-#'
-#' Upgrades local (or symlinked) webppl installation to newest version allowed
-#' by rwebppl (currently 0.8.1)
-#'
-#' @return NULL
-#' @export
-#'
-#' @examples
-#' \dontrun{upgrade_webppl()}
-upgrade_webppl <- function() {
-  localPath = paste(c(rwebppl_path(), "js/webppl"), collapse = "/")
-  # If there's a global install, just upgrade that (and symlink will sync)
-  if(!is.null(find_webppl())) {
-    system2("npm", args = c("update", "-g", "webppl"))
-  # Otherwise, upgrade local installation
-  } else {
-    system2(file.path(rwebppl_path(), "bash", "upgrade-webppl.sh"),
-            args = rwebppl_path())
-    system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
-            args = rwebppl_path())
-  }
-}
-#' Symlink global webppl install to rwebppl directory
-#'
-#' If you installed webppl with rwebppl and later decided to install it globally,
-#' it's useful to replace the rwebppl install with a symlink to the global install
-#'
-#' @param globalLoc Path to global webppl installation (defaults to npm root)
-#' @return NULL
-#' @export
-#'
-#' @examples
-#' \dontrun{link_webppl()}
-link_webppl <- function(globalLoc = find_webppl()) {
-  localPath = paste(c(rwebppl_path(), "js/webppl"), collapse = "/")
-  if(!is.null(globalLoc)) {
-    # Remove current install inside rwebppl directory
-    if(file_exists(localPath)) {
-      system2("rm", args = c("-r", localPath))
-    }
-    # Link given install to rwebppl directory
-    system2("ln", args = c("-s", globalLoc,
-                           paste(c(rwebppl_path(), "js"), collapse = "/")))
-  } else {
-    warning("couldn't find global installation to symlink: please provide location")
-  }
-}
-
-file_exists <- function(path) {
-  args <- c("!", "-e", path, ";", "echo", "$?")
-  existsFlag <- suppressWarnings(system2("test", args = args, stdout = T))
-  return(existsFlag == 1)
-}
-
-# Looks for webppl in common locations
-find_webppl <- function() {
-  binLoc <- suppressWarnings(system2("which", args = c("webppl"), stdout = TRUE))
-
-  # If there's no binary on the machine, return null
-  if(!is.null(attr(binLoc, "status"))) {
-    return(NULL)
-  } else {
-    outerDir <- dirname(dirname(binLoc))
-    outerDirName <- basename(dirname(binLoc))
-
-    # If in /bin, look for global npm install
-    # follow a sym link or use npm root -g (with webppl at the end)
-    if(outerDirName == "bin") {
-      nodeDir <- system2("npm", args = c("root -g"), stdout = T)
-      if(!is.null(attr(binLoc, "status"))) {
-        return(NULL)
-      } else {
-        return(file.path(nodeDir, "webppl"))
-      }
-    # if the binary is inside a "webppl" directory, probably used git
-    } else if (outerDirName == "webppl") {
-      return(outerDir)
-
-    # Otherwise just do a fresh install anyway
-    } else {
-      return(NULL)
-    }
-  }
-}
-
-# Internal function to check whether a user already has webppl installed
+# Internal function to ensure the user already has webppl installed on load
+# Installs default version in DESCRIPTION if it doesn't already exist
 check_webppl <- function() {
-  # Note: this will return the location of the binary if installed via npm
-  webppl.loc <- find_webppl()
-  localCopy.exist <- file_exists(paste(c(rwebppl_path(), "js", "webppl"),
-                                       collapse = "/"))
-  # If already installed by RWebPPL, symlink global if it exists; otherwise install locally
-  if (!localCopy.exist) {
-    if (!is.null(webppl.loc)) {
-      link_webppl(webppl.loc)
-    } else {
-      webppl_version <- utils::packageDescription("rwebppl",
-                                                  fields = "WebPPLVersion")
-      install_webppl(webppl_version)
-    }
+  if (!file_exists(webppl_path())) {
+    webppl_version <- utils::packageDescription("rwebppl", fields = "WebPPLVersion")
+    install_webppl(webppl_version)
   }
 }
 
@@ -139,13 +55,11 @@ check_webppl <- function() {
 #' @examples
 #' \dontrun{get_webppl_version()}
 get_webppl_version <- function() {
-  # Note: this will return the location of the binary if installed via npm
-  localCopy = paste(c(rwebppl_path(), "js", "webppl", "webppl"), collapse = "/")
-  localCopy.exists <- file_exists(localCopy)
-  if (localCopy.exists) {
-    message(paste("local webppl exists:", system2(localCopy, args = c("--version"), stdout = T)))
+  if (file_exists(webppl_path())) {
+    version_str <- system2(webppl_path(), args = c("--version"), stdout = T)
+    message(paste("local webppl exists:", version_str))
   } else {
-    warning("couldn't find local webppl install/symlink")
+    warning("couldn't find local webppl install")
   }
 }
 
