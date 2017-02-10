@@ -3,8 +3,6 @@
 export(get_samples)
 export(get_webppl_version)
 export(install_webppl_package)
-export(link_webppl)
 export(uninstall_webppl_package)
-export(upgrade_webppl)
 export(webppl)
 importFrom(foreach,"%dopar%")
