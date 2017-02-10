@@ -2,8 +2,9 @@
 
 [![Travis-CI Build Status](https://travis-ci.org/mhtess/rwebppl.svg?branch=master)](https://travis-ci.org/mhtess/rwebppl)
 
-## Installation
+RWebPPL is an R package providing an interface to [WebPPL](https://github.com/probmods/webppl), a probabilistic programming language.
 
+## Installation
 
 #### System requirements
 + Mac or Linux OS [Windows currently not supported]
@@ -12,18 +13,11 @@
 + [npm](https://docs.npmjs.com/getting-started/installing-node) v3.6 or higher (in Terminal, type `npm --version`; if it's not >= v3.6; try `sudo npm install npm -g`, close and reopen terminal and check version)
 + devtools R library: in R: `install.packages('devtools')`
 
-N.B.: If you plan to use command-line WebPPL, in addition to RWebPPL, we advise you first [`npm install -g webppl`](http://webppl.readthedocs.io/en/master/quickstart.html) and then install RWebPPL.
-
-N.B.: If your node set-up depends on your environment variables, you may need to start rstudio from the terminal (rstudio does not otherwise load `.bashrc` files, for example).
-
 ```
 devtools::install_github("mhtess/rwebppl")
 ```
 
-If you already have installed WebPPL using `npm install -g webppl`, then RWebPPL will link to your installed version.
-
-If you do not have WebPPL installed already, it will install it for you (into the R package directory).
-
+RWebPPL always installs its own local version of WebPPL for stability: by default, it will install the most recent, compatible release. Advanced users may use the `install_webppl()` function to override this default to install from any official NPM release tag (e.g. '0.9.7') or any commit hash from the WebPPL github repository.
 
 ## Usage
 
