@@ -2,6 +2,7 @@
 
 export(get_samples)
 export(get_webppl_version)
+export(install_webppl)
 export(install_webppl_package)
 export(uninstall_webppl_package)
 export(webppl)

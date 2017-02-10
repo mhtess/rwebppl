@@ -14,7 +14,17 @@ file_exists <- function(path) {
   return(existsFlag == 1)
 }
 
-# TODO: add docs for install_webppl()
+#' Installs webppl locally
+#' 
+#' Supports both official npm release versions (e.g. '0.9.6') and 
+#' also commit hashes from the github repository for custom configurations
+#'
+#' @return NULL
+#' @export
+#'
+#' @examples
+#' \dontrun{install_webppl('0.9.6')}
+#' \dontrun{install_webppl('4bd2452333d24c122aee98c3206584bc39c6096a')}
 install_webppl <- function(webppl_version) {
   message("installing webppl ...", appendLF = FALSE)
   npm_info <- system2("npm", args = c("info", "webppl", "versions", "--json"),
