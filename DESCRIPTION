@@ -27,4 +27,4 @@ Imports:
 RoxygenNote: 5.0.1
 SystemRequirements: node
 Suggests: testthat
-WebPPLVersion: 4bd2452333d24c122aee98c3206584bc39c6096a
+WebPPLVersion: 0.9.6
