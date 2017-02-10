@@ -18,7 +18,7 @@ file_exists <- function(path) {
 #' 
 #' Supports both official npm release versions (e.g. '0.9.6') and 
 #' also commit hashes from the github repository for custom configurations
-#'
+#' @param webppl_version official npm tag or commit hash
 #' @return NULL
 #' @export
 #'

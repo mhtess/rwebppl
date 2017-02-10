@@ -6,6 +6,9 @@
 \usage{
 install_webppl(webppl_version)
 }
+\arguments{
+\item{webppl_version}{official npm tag or commit hash}
+}
 \description{
 Supports both official npm release versions (e.g. '0.9.6') and 
 also commit hashes from the github repository for custom configurations
