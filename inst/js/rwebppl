@@ -4,9 +4,10 @@ var webppl = require('./webppl')
 var webppl_main = require('./webppl/src/main');
 var util = require('./webppl/src/util');
 var pkg = require('./webppl/src/pkg');
-var parseArgs = require('./webppl/node_modules/minimist');
+var argv = require('./webppl/node_modules/minimist')(process.argv.slice(2));
 var path = require('path');
 var fs = require('fs');
+
 
 function writeWebPPLValue(x, file) {
   if (dists.isDist(x) && x.isContinuous) {
@@ -24,15 +25,10 @@ function writeWebPPLValue(x, file) {
 
 
 function main() {
-
-  var argv = parseArgs(process.argv.slice(2));
-  var programFile = argv._[0];
-  var outputFile = argv._[1];
-
-  var code = fs.readFileSync(programFile, 'utf8');
+  var code = fs.readFileSync(argv.programFile, 'utf8');
 
   var packagePaths = [
-    path.join(path.dirname(programFile), 'node_modules'),
+    path.join(path.dirname(argv.programFile), 'node_modules'),
     pkg.globalPkgDir()
   ];
 
@@ -46,7 +42,7 @@ function main() {
   });
 
   webppl.run(code, function(s,x) {
-    writeWebPPLValue(x, outputFile);
+    writeWebPPLValue(x, argv.outputFile);
   }, {
     bundles: webppl_main.parsePackageCode(packages, false)
   });
@@ -56,7 +52,5 @@ function main() {
 try {
   main();
 } finally {
-  var argv = parseArgs(process.argv.slice(2));
-  var finishFile = argv._[2];
-  fs.writeFileSync(finishFile,  "");
+  fs.writeFileSync(argv.finishFile,  "");
 }
