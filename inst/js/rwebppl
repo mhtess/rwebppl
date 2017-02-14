@@ -18,17 +18,8 @@ function writeWebPPLValue(x, file) {
   }
   // write to a temporary file and then rename it to output file name, so that
   // creating the output file is atomic
-  fs.writeFile(file + "_tmp", serialized_x + "\n", function(err) {
-    if (err) {
-      console.error(err);
-    } else {
-      fs.rename(file + "_tmp", file, function(err) {
-        if (err) {
-          console.error(err);
-        };
-      });
-    };
-  });
+  fs.writeFileSync(file + "_tmp", serialized_x + "\n");
+  fs.renameSync(file + "_tmp", file);
 };
 
 
@@ -67,5 +58,5 @@ try {
 } finally {
   var argv = parseArgs(process.argv.slice(2));
   var finishFile = argv._[2];
-  fs.writeFile(finishFile,  "");
+  fs.writeFileSync(finishFile,  "");
 }
