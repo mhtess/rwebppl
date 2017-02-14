@@ -2,7 +2,8 @@
 rwebppl_path <- function() system.file(package = "rwebppl")
 
 # Path to local webppl install
-webppl_path = function() paste(c(rwebppl_path(), 'js', 'webppl', 'webppl'), collapse = "/")
+webppl_install = function() file.path(rwebppl_path(), 'js', 'webppl')
+webppl_executable = function() file.path(webppl_install(), 'webppl')
 
 # Path to where webppl looks for webppl npm packages
 global_pkg_path <- function() path.expand("~/.webppl")
@@ -12,6 +13,12 @@ file_exists <- function(path) {
   args <- c("!", "-e", path, ";", "echo", "$?")
   existsFlag <- suppressWarnings(system2("test", args = args, stdout = T))
   return(existsFlag == 1)
+}
+
+# Internal function that cleans the local webppl install
+clean_webppl <- function() {
+  message("cleaning old version... ", appendLF = FALSE)
+  system2("rm", args = c('-r', webppl_install()))
 }
 
 #' Installs webppl locally
@@ -26,6 +33,10 @@ file_exists <- function(path) {
 #' \dontrun{install_webppl('0.9.6')}
 #' \dontrun{install_webppl('4bd2452333d24c122aee98c3206584bc39c6096a')}
 install_webppl <- function(webppl_version) {
+  # first, clean up any webppl version that might already exist
+  if(file_exists(webppl_executable())) {
+    clean_webppl()
+  }
   message("installing webppl ...", appendLF = FALSE)
   npm_info <- system2("npm", args = c("info", "webppl", "versions", "--json"),
                       stdout = TRUE)
@@ -51,7 +62,7 @@ install_webppl <- function(webppl_version) {
 # Internal function to ensure the user already has webppl installed on load
 # Installs default version in DESCRIPTION if it doesn't already exist
 check_webppl <- function() {
-  if (!file_exists(webppl_path())) {
+  if (!file_exists(webppl_executable())) {
     webppl_version <- utils::packageDescription("rwebppl", fields = "WebPPLVersion")
     install_webppl(webppl_version)
   }
@@ -65,9 +76,9 @@ check_webppl <- function() {
 #' @examples
 #' \dontrun{get_webppl_version()}
 get_webppl_version <- function() {
-  if (file_exists(webppl_path())) {
-    version_str <- system2(webppl_path(), args = c("--version"), stdout = T)
-    message(paste("local webppl exists:", version_str))
+  if (file_exists(webppl_executable())) {
+    version_str <- system2(webppl_executable(), args = c("--version"), stdout = T)
+    message(paste("using webppl version:", version_str))
   } else {
     warning("couldn't find local webppl install")
   }
