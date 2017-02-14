@@ -1,117 +1,70 @@
 # Path to rwebppl R package
 rwebppl_path <- function() system.file(package = "rwebppl")
 
+# Path to local webppl install
+webppl_install = function() file.path(rwebppl_path(), 'js', 'webppl')
+webppl_executable = function() file.path(webppl_install(), 'webppl')
+
 # Path to where webppl looks for webppl npm packages
 global_pkg_path <- function() path.expand("~/.webppl")
 
-install_webppl <- function() {
-  message("installing webppl ...", appendLF = FALSE)
-  system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
-          args = rwebppl_path())
-  system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
-          args = rwebppl_path())
-  message(" done")
-}
-
-#' Upgrade webppl installation
-#'
-#' Upgrades local (or symlinked) webppl installation to newest version allowed
-#' by rwebppl (currently 0.8.1)
-#'
-#' @return NULL
-#' @export
-#'
-#' @examples
-#' \dontrun{upgrade_webppl()}
-upgrade_webppl <- function() {
-  localPath = paste(c(rwebppl_path(), "js/webppl"), collapse = "/")
-  # If there's a global install, just upgrade that (and symlink will sync)
-  if(!is.null(find_webppl())) {
-    system2("npm", args = c("update", "-g", "webppl"))
-  # Otherwise, upgrade local installation
-  } else {
-    system2(file.path(rwebppl_path(), "bash", "upgrade-webppl.sh"),
-            args = rwebppl_path())
-    system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
-            args = rwebppl_path()) 
-  }
-}
-#' Symlink global webppl install to rwebppl directory
-#'
-#' If you installed webppl with rwebppl and later decided to install it globally, 
-#' it's useful to replace the rwebppl install with a symlink to the global install
-#'
-#' @param globalLoc Path to global webppl installation (defaults to npm root)
-#' @return NULL
-#' @export
-#'
-#' @examples
-#' \dontrun{link_webppl()}
-link_webppl <- function(globalLoc = find_webppl()) {
-  localPath = paste(c(rwebppl_path(), "js/webppl"), collapse = "/")
-  if(!is.null(globalLoc)) {
-    # Remove current install inside rwebppl directory
-    if(file_exists(localPath)) {
-      system2("rm", args = c("-r", localPath))
-    }
-    # Link given install to rwebppl directory
-    system2("ln", args = c("-s", globalLoc,
-                           paste(c(rwebppl_path(), "js"), collapse = "/")))
-  } else {
-    warning("couldn't find global installation to symlink: please provide location")
-  }
-}
-
+# Internal function that checks whether a file exists
 file_exists <- function(path) {
   args <- c("!", "-e", path, ";", "echo", "$?")
   existsFlag <- suppressWarnings(system2("test", args = args, stdout = T))
   return(existsFlag == 1)
 }
 
-# Looks for webppl in common locations
-find_webppl <- function() {
-  binLoc <- suppressWarnings(system2("which", args = c("webppl"), stdout = TRUE))
-
-  # If there's no binary on the machine, return null
-  if(!is.null(attr(binLoc, "status"))) {
-    return(NULL)
-  } else {
-    outerDir <- dirname(dirname(binLoc))
-    outerDirName <- basename(dirname(binLoc))
-
-    # If in /bin, look for global npm install
-    # follow a sym link or use npm root -g (with webppl at the end)
-    if(outerDirName == "bin") {
-      nodeDir <- system2("npm", args = c("root -g"), stdout = T)
-      if(!is.null(attr(binLoc, "status"))) {
-        return(NULL)
-      } else {
-        return(file.path(nodeDir, "webppl"))
-      }
-    # if the binary is inside a "webppl" directory, probably used git
-    } else if (outerDirName == "webppl") {
-      return(outerDir)
-    
-    # Otherwise just do a fresh install anyway
-    } else {
-      return(NULL)
-    }
-  }
+# Internal function that cleans the local webppl install
+clean_webppl <- function() {
+  message("cleaning old version... ", appendLF = FALSE)
+  system2("rm", args = c('-r', webppl_install()))
 }
 
-# Internal function to check whether a user already has webppl installed
+#' Installs webppl locally
+#' 
+#' Supports both official npm release versions (e.g. '0.9.6') and 
+#' also commit hashes from the github repository for custom configurations
+#' @param webppl_version official npm tag or commit hash
+#' @return NULL
+#' @export
+#'
+#' @examples
+#' \dontrun{install_webppl('0.9.6')}
+#' \dontrun{install_webppl('4bd2452333d24c122aee98c3206584bc39c6096a')}
+install_webppl <- function(webppl_version) {
+  # first, clean up any webppl version that might already exist
+  if(file_exists(webppl_executable())) {
+    clean_webppl()
+  }
+  message("installing webppl ...", appendLF = FALSE)
+  npm_info <- system2("npm", args = c("info", "webppl", "versions", "--json"),
+                      stdout = TRUE)
+  npm_versions <- jsonlite::fromJSON(paste(npm_info, collapse = ""))
+  if (webppl_version %in% npm_versions) {
+    rwebppl_json <- file.path(rwebppl_path(), "json", "rwebppl.json")
+    rwebppl_meta <- jsonlite::fromJSON(readLines(rwebppl_json))
+    rwebppl_meta$dependencies$webppl <- webppl_version
+    webppl_json <- file.path(rwebppl_path(), "js", "package.json")
+    writeLines(jsonlite::toJSON(rwebppl_meta, auto_unbox = TRUE, pretty = TRUE),
+               webppl_json)
+    system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
+            args = rwebppl_path())
+     system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
+             args = rwebppl_path())
+  } else {
+    system2(file.path(rwebppl_path(), "bash", "install-dev-webppl.sh"),
+            args = c(rwebppl_path(), webppl_version))
+  }
+  message(" done")
+}
+
+# Internal function to ensure the user already has webppl installed on load
+# Installs default version in DESCRIPTION if it doesn't already exist
 check_webppl <- function() {
-  # Note: this will return the location of the binary if installed via npm
-  webppl.loc <- find_webppl()
-  localCopy.exist <- file_exists(paste(c(rwebppl_path(), "js", "webppl"), 
-                                       collapse = "/"))
-  # If already installed by RWebPPL, symlink global if it exists; otherwise install locally
-  if(!localCopy.exist){
-    if(!is.null(webppl.loc)) {
-      link_webppl(webppl.loc)
-    } else {
-      install_webppl()
-    } 
+  if (!file_exists(webppl_executable())) {
+    webppl_version <- utils::packageDescription("rwebppl", fields = "WebPPLVersion")
+    install_webppl(webppl_version)
   }
 }
 
@@ -121,21 +74,19 @@ check_webppl <- function() {
 #' @export
 #'
 #' @examples
-#' \dontrun{webppl_version()}
-webppl_version <- function() {
-  # Note: this will return the location of the binary if installed via npm
-  localCopy = paste(c(rwebppl_path(), "js", "webppl", "webppl"), collapse = "/")
-  localCopy.exists <- file_exists(localCopy)
-  if(localCopy.exists) {
-    message(paste("local webppl exists:", system2(localCopy, args = c("--version"), stdout = T)))
+#' \dontrun{get_webppl_version()}
+get_webppl_version <- function() {
+  if (file_exists(webppl_executable())) {
+    version_str <- system2(webppl_executable(), args = c("--version"), stdout = T)
+    message(paste("using webppl version:", version_str))
   } else {
-    warning("couldn't find local webppl install/symlink")
+    warning("couldn't find local webppl install")
   }
 }
 
 .onLoad <- function(libname, pkgname) {
   check_webppl()
-  webppl_version()
+  get_webppl_version()
 }
 
 #' Install webppl package
@@ -261,7 +212,7 @@ tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
 #' @param inference_opts Options for inference
 #' (see http://webppl.readthedocs.io/en/master/inference.html)
 #' @param output_format An optional string indicating posterior output format:
-#' "webppl" probability table (default), "samples" for just the samples, 
+#' "webppl" probability table (default), "samples" for just the samples,
 #' "ggmcmc" for use with ggmcmc package.
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
@@ -363,7 +314,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                            collapse = "\n")
     if (output_string != "") {
       output <- jsonlite::fromJSON(output_string, flatten = TRUE)
-      tidy_output(output, output_format = output_format, chains = chains, 
+      tidy_output(output, output_format = output_format, chains = chains,
                   chain = chain, inference_opts = inference_opts)
     }
   }

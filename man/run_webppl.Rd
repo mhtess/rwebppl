@@ -27,7 +27,7 @@ referenced in the program.}
 (see http://webppl.readthedocs.io/en/master/inference.html)}
 
 \item{output_format}{An optional string indicating posterior output format:
-"webppl" probability table (default), "samples" for just the samples, 
+"webppl" probability table (default), "samples" for just the samples,
 "ggmcmc" for use with ggmcmc package.}
 
 \item{chains}{Number of chains (this run is one chain).}
