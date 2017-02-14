@@ -2,7 +2,7 @@
 rwebppl_path <- function() system.file(package = "rwebppl")
 
 # Path to local webppl install
-webppl_path = function() paste(c(rwebppl_path(), "js", "webppl", "webppl"), collapse = "/")
+webppl_path = function() paste(c(rwebppl_path(), 'js', 'webppl', 'webppl'), collapse = "/")
 
 # Path to where webppl looks for webppl npm packages
 global_pkg_path <- function() path.expand("~/.webppl")
@@ -39,12 +39,12 @@ install_webppl <- function(webppl_version) {
                webppl_json)
     system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
             args = rwebppl_path())
+     system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
+             args = rwebppl_path())
   } else {
     system2(file.path(rwebppl_path(), "bash", "install-dev-webppl.sh"),
             args = c(rwebppl_path(), webppl_version))
   }
-  system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
-          args = rwebppl_path())
   message(" done")
 }
 
