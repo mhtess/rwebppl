@@ -142,26 +142,26 @@ get_samples <- function(df, num_samples) {
   df[rows, cols, drop = FALSE]
 }
 
-is_mcmc <- function(model_output) {
-  ((names(model_output)[1] == "score") & 
-     all(grepl("value", names(model_output)[2:length(names(model_output))])))
+is_mcmc <- function(output) {
+  ((names(output)[1] == "score") & 
+     all(grepl("value", names(output)[2:length(names(output))])))
 }
 
-is_rejection <- function(model_output) {
-  all(grepl("value", names(model_output)))
+is_rejection <- function(output) {
+  all(grepl("value", names(output)))
 }
 
-is_sampleList <- function(model_output) {
-  is_mcmc(model_output) || is_rejection(model_output)
+is_sampleList <- function(output) {
+  is_mcmc(output) || is_rejection(output)
 }
 
-is_probTable <- function(model_output){
-  all(names(model_output) %in% c("probs", "support"))
+is_probTable <- function(output){
+  all(names(output) %in% c("probs", "support"))
 }
 
-isOptimizeParams <- function(model_output){
-  (all(c("dims", "length") %in% names(model_output[[1]])) &&
-     all(c("dims", "length") %in% names(model_output[[length(model_output)]])))
+isOptimizeParams <- function(output){
+  (all(c("dims", "length") %in% names(output[[1]])) &&
+     all(c("dims", "length") %in% names(output[[length(output)]])))
 }
 
 # Try to use inference_opts to determine # samples; otherwise use size of list
@@ -175,13 +175,13 @@ countSamples <- function(output, inference_opts) {
   }
 }
 
-tidy_probTable <- function(model_output) {
-  if (class(model_output$support) == "data.frame") {
-    support <- model_output$support
+tidy_probTable <- function(output) {
+  if (class(output$support) == "data.frame") {
+    support <- output$support
   } else {
-    support <- data.frame(support = model_output$support)
+    support <- data.frame(support = output$support)
   }
-  return(cbind(support, data.frame(prob = model_output$probs)))
+  return(cbind(support, data.frame(prob = output$probs)))
 }
 
 tidy_sampleList <- function(output, chains, chain, inference_opts) {
@@ -205,17 +205,17 @@ tidy_sampleList <- function(output, chains, chain, inference_opts) {
   return(ggmcmc_samples)
 }
 
-tidy_output <- function(model_output, chains = NULL, chain = NULL, inference_opts = NULL) {
-  if (is_probTable(model_output)) {
-    return(tidy_probTable(model_output))
-  } else if (is_sampleList(model_output)) {
+tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NULL) {
+  if (is_probTable(output)) {
+    return(tidy_probTable(output))
+  } else if (is_sampleList(output)) {
     # Drop redundant score column, if it exists
-    if ("score" %in% names(model_output)) { 
-      model_output <- subset(model_output, select = -c(score))
+    if ("score" %in% names(output)) { 
+      output <- output[, names(output) != 'score', drop = F]
     } 
-    return(tidy_sampleList(model_output, chains, chain, inference_opts))
+    return(tidy_sampleList(output, chains, chain, inference_opts))
   } else {
-    return(model_output)
+    return(output)
   }
 }
 
