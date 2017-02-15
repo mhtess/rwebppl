@@ -164,6 +164,17 @@ isOptimizeParams <- function(model_output){
      all(c("dims", "length") %in% names(model_output[[length(model_output)]])))
 }
 
+# Try to use inference_opts to determine # samples; otherwise use size of list
+countSamples <- function(output, inference_opts) {
+  if(!(is.null(inference_opts[["samples"]]))) {
+    return(inference_opts[["samples"]])
+  } else if (!(is.null(inference_opts[["particles"]]))) {
+    return(inference_opts[["particles"]])
+  } else {
+    return(nrow(output))
+  }
+}
+
 tidy_probTable <- function(model_output) {
   if (class(model_output$support) == "data.frame") {
     support <- model_output$support
@@ -175,12 +186,9 @@ tidy_probTable <- function(model_output) {
 
 tidy_sampleList <- function(output, chains, chain, inference_opts) {
   names(output) <- gsub("value.", "", names(output))
-  num_samples <- ifelse(!(is.null(inference_opts[["samples"]])), 
-                        inference_opts[["samples"]],
-                        ifelse(!(is.null(inference_opts[["particles"]])), 
-                               inference_opts[["particles"]],
-                               nrow(output)))
-  output$Iteration <- 1:num_samples # as of wp0.9.6, samples come out in the order they were collected
+  num_samples <- countSamples(output, inference_opts)
+  # as of webppl v0.9.6, samples come out in the order they were collected
+  output$Iteration <- 1:num_samples 
   ggmcmc_samples <- tidyr::gather_(
     output, key_col = "Parameter", value_col = "value",
     gather_cols = names(output)[names(output) != "Iteration"],
@@ -201,10 +209,9 @@ tidy_output <- function(model_output, chains = NULL, chain = NULL, inference_opt
   if (is_probTable(model_output)) {
     return(tidy_probTable(model_output))
   } else if (is_sampleList(model_output)) {
-    # Drop score column, if it exists
-    if ("score" %in% names(model_output)) {
-      model_output <- model_output[, names(model_output) != "score",
-                                   drop = FALSE]
+    # Drop redundant score column, if it exists
+    if ("score" %in% names(model_output)) { 
+      model_output <- subset(model_output, select = -c(score))
     } 
     return(tidy_sampleList(model_output, chains, chain, inference_opts))
   } else {
