@@ -6,8 +6,7 @@
 \usage{
 webppl(program_code = NULL, program_file = NULL, data = NULL,
   data_var = NULL, packages = NULL, model_var = NULL,
-  inference_opts = NULL, chains = 1, cores = 1,
-  output_format = "webppl")
+  inference_opts = NULL, chains = 1, cores = 1)
 }
 \arguments{
 \item{program_code}{A string of a webppl program.}
@@ -30,10 +29,6 @@ referenced in the program.}
 
 \item{cores}{Number of cores to use when running multiple chains (defaults to
 1).}
-
-\item{output_format}{An optional string indicating posterior output format:
-"webppl" probability table (default), "samples" for just the samples,
-"ggmcmc" for use with ggmcmc package.}
 }
 \value{
 The program's return value(s).

@@ -23,14 +23,13 @@ RWebPPL always installs its own local version of WebPPL for stability: by defaul
 
 ### Current list of function arguments and supported functionality
 
-+ `program_code`: A string of a webppl program 
++ `program_code`: A string of a webppl program
 + `program_file`: A file containing a webppl program
 + `data`: A data frame (or other serializable object) to be passed from R to the webppl program
 + `data_var`: A name by which the data can be referenced in the webppl program
 + `packages`: A character vector of names of external webppl package to use
 + `model_var`: When using inference opts, the name by which the model be referenced in the program.
 + `inference_opts`: A list with options for inference of a particular model in the program. (see http://webppl.readthedocs.io/en/master/inference.html) [N.B.: requires using `model_var`]
-+ `output_format`: An optional string indicating posterior output format: "webppl" probability table (default), "samples" for just the samples, "ggmcmc" for use with [ggmcmc package](http://xavier-fim.net/packages/ggmcmc/). [N.B.: requires using `inference_opts` and `model_var`]
 + `chains`: Number of times to run program (defaults to 1).
 + `cores`: Number of cores to use when running multiple chains (defaults to 1).
 

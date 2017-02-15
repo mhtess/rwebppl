@@ -50,8 +50,8 @@ install_webppl <- function(webppl_version) {
                webppl_json)
     system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
             args = rwebppl_path())
-     system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
-             args = rwebppl_path())
+    system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
+            args = rwebppl_path())
   } else {
     system2(file.path(rwebppl_path(), "bash", "install-dev-webppl.sh"),
             args = c(rwebppl_path(), webppl_version))
@@ -142,59 +142,80 @@ get_samples <- function(df, num_samples) {
   df[rows, cols, drop = FALSE]
 }
 
-tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
-                        chain = NULL, inference_opts = NULL) {
-  if (!is.null(names(model_output)) &&
-      length(names(model_output)) == 2) {
-    if (all(names(model_output) %in% c("probs", "support"))) {
-      if (class(model_output$support) == "data.frame") {
-        support <- model_output$support
-      } else {
-        support <- data.frame(support = model_output$support)
-      }
-      tidied_output <- cbind(support, data.frame(prob = model_output$probs))
-    } else if ("score" %in% names(model_output)) {
-      tidied_output <- model_output[, names(model_output) != "score",
-                                    drop = FALSE]
-    } else {
-      tidied_output <- model_output
-    }
-    if (output_format=="ggmcmc" & !is.null(inference_opts) & !is.null(chain) &
-        !is.null(chains)) {
-      num_samples <- inference_opts[["samples"]]
-      if (all(grepl("value", names(tidied_output)))) {
-        samples <- tidied_output
-      } else {
-        samples <- get_samples(tidied_output, num_samples)
-      }
-      samples$Iteration <- 1:num_samples
-      ggmcmc_samples <- tidyr::gather_(
-        samples, key_col = "Parameter", value_col = "value",
-        gather_cols = names(samples)[names(samples) != "Iteration"],
-        factor_key = TRUE
-      )
-      ggmcmc_samples$Chain <- chain
+is_mcmc <- function(output) {
+  ((names(output)[1] == "score") & 
+     all(grepl("value", names(output)[2:length(names(output))])))
+}
 
-      attr(ggmcmc_samples, "nChains") <- chains
-      attr(ggmcmc_samples, "nParameters") <- ncol(samples) - 1
-      attr(ggmcmc_samples, "nIterations") <- inference_opts[["samples"]]
-      attr(ggmcmc_samples, "nBurnin") <- inference_opts[["burn"]]
-      attr(ggmcmc_samples, "nThin") <- inference_opts[["thin"]]
-      attr(ggmcmc_samples, "description") <- ""
-      ggmcmc_samples
-    } else if (output_format=="samples" & !is.null(inference_opts)) {
-      num_samples <- inference_opts[["samples"]]
-      if (all(grepl("value", names(tidied_output)))) {
-        samples <- tidied_output
-      } else {
-        samples <- get_samples(tidied_output, num_samples)
-      }
-      samples
-    } else {
-      tidied_output
-    }
+is_rejection <- function(output) {
+  all(grepl("value", names(output)))
+}
+
+is_sampleList <- function(output) {
+  is_mcmc(output) || is_rejection(output)
+}
+
+is_probTable <- function(output){
+  all(names(output) %in% c("probs", "support"))
+}
+
+isOptimizeParams <- function(output){
+  (all(c("dims", "length") %in% names(output[[1]])) &&
+     all(c("dims", "length") %in% names(output[[length(output)]])))
+}
+
+# Try to use inference_opts to determine # samples; otherwise use size of list
+countSamples <- function(output, inference_opts) {
+  if(!(is.null(inference_opts[["samples"]]))) {
+    return(inference_opts[["samples"]])
+  } else if (!(is.null(inference_opts[["particles"]]))) {
+    return(inference_opts[["particles"]])
   } else {
-    model_output
+    return(nrow(output))
+  }
+}
+
+tidy_probTable <- function(output) {
+  if (class(output$support) == "data.frame") {
+    support <- output$support
+  } else {
+    support <- data.frame(support = output$support)
+  }
+  return(cbind(support, data.frame(prob = output$probs)))
+}
+
+tidy_sampleList <- function(output, chains, chain, inference_opts) {
+  names(output) <- gsub("value.", "", names(output))
+  num_samples <- countSamples(output, inference_opts)
+  # as of webppl v0.9.6, samples come out in the order they were collected
+  output$Iteration <- 1:num_samples 
+  ggmcmc_samples <- tidyr::gather_(
+    output, key_col = "Parameter", value_col = "value",
+    gather_cols = names(output)[names(output) != "Iteration"],
+    factor_key = TRUE
+  )
+  ggmcmc_samples$Chain <- chain
+  ggmcmc_samples <- ggmcmc_samples[,c("Iteration", "Chain", "Parameter", "value")] # reorder columns
+  attr(ggmcmc_samples, "nChains") <- chains
+  attr(ggmcmc_samples, "nParameters") <- ncol(output) - 1
+  attr(ggmcmc_samples, "nIterations") <- num_samples
+  attr(ggmcmc_samples, "nBurnin") <- ifelse(is.null(inference_opts[["burn"]]), 0, inference_opts[["burn"]])
+  attr(ggmcmc_samples, "nThin") <- ifelse(is.null(inference_opts[["thin"]]), 1, inference_opts[["thin"]])
+  attr(ggmcmc_samples, "description") <- ifelse(is.null(inference_opts[["method"]]), "", inference_opts[["method"]])
+  return(ggmcmc_samples)
+}
+
+tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NULL) {
+  if (is_probTable(output)) {
+    return(tidy_probTable(output))
+  } else if (is_sampleList(output)) {
+    # Drop redundant score column, if it exists
+    if ("score" %in% names(output)) { 
+      output <- output[, names(output) != 'score', drop = F]
+    } 
+    return(tidy_sampleList(output, chains, chain, inference_opts))
+  } else {
+    return(output)
   }
 }
 
@@ -211,14 +232,11 @@ tidy_output <- function(model_output, output_format = "webppl", chains = NULL,
 #' @param model_var The name by which the model be referenced in the program.
 #' @param inference_opts Options for inference
 #' (see http://webppl.readthedocs.io/en/master/inference.html)
-#' @param output_format An optional string indicating posterior output format:
-#' "webppl" probability table (default), "samples" for just the samples,
-#' "ggmcmc" for use with ggmcmc package.
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
 run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                        data_var = NULL, packages = NULL, model_var = NULL,
-                       inference_opts = NULL, output_format = "webppl", chains = NULL,
+                       inference_opts = NULL, chains = NULL,
                        chain = 1) {
 
   # find location of rwebppl JS script, within rwebppl R package
@@ -292,14 +310,18 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     Sys.sleep(0.25)
   }
 
-  # if the command produced output, collect and tidy the results
+  # if the command produced non-empty output, collect and tidy the results
   if (file.exists(output_file)) {
     output_string <- paste(readLines(output_file, warn = F),
                            collapse = "\n")
     if (output_string != "") {
       output <- jsonlite::fromJSON(output_string, flatten = TRUE)
-      tidy_output(output, output_format = output_format, chains = chains,
-                  chain = chain, inference_opts = inference_opts)
+      if (!is.null(names(output))) {
+        return(tidy_output(output, chains = chains,
+                           chain = chain, inference_opts = inference_opts))
+      } else {
+        return(output)
+      }
     }
   }
 }
@@ -325,8 +347,7 @@ globalVariables("i")
 #' webppl(program_code)
 webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                    data_var = NULL, packages = NULL, model_var = NULL,
-                   inference_opts = NULL, chains = 1, cores = 1,
-                   output_format = "webppl") {
+                   inference_opts = NULL, chains = 1, cores = 1) {
 
   run_fun <- function(k) run_webppl(program_code = program_code,
                                     program_file = program_file,
@@ -335,7 +356,6 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                                     packages = packages,
                                     model_var = model_var,
                                     inference_opts = inference_opts,
-                                    output_format = output_format,
                                     chains = chains,
                                     chain = k)
   if (chains == 1) {
@@ -343,10 +363,6 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
   } else {
     doParallel::registerDoParallel(cores = cores)
     chain_outputs <- foreach::foreach(i = 1:chains) %dopar% run_fun(i)
-    if (output_format!="webppl") {
-      Reduce(rbind, chain_outputs)
-    } else {
-      chain_outputs
-    }
+    Reduce(rbind, chain_outputs)
   }
 }
