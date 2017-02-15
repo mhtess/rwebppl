@@ -241,7 +241,6 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
   # find location of rwebppl JS script, within rwebppl R package
   script_path <- file.path(rwebppl_path(), "js/rwebppl")
-  add_packages <- packages
 
   # if data supplied, create a webppl package that exports the data as data_var
   if (!is.null(data)) {
@@ -255,7 +254,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
       data_string <- jsonlite::toJSON(data)
       cat(sprintf("module.exports = JSON.parse('%s')", data_string),
           file = file.path(tmp_dir, data_var, "index.js"))
-      add_packages <- c(add_packages, file.path(tmp_dir, data_var))
+      packages <- c(packages, file.path(tmp_dir, data_var))
     }
   }
 
@@ -286,42 +285,27 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     modified_program_code <- paste(modified_program_code, infer, sep = "\n")
   }
 
-  # write modified_program_code to temporary file and store its name in file_arg
-  cat(modified_program_code, file = (file_arg <- tempfile()))
-
-  # set output_arg to path to temporary file with a unique key
-  uid <- uuid::UUIDgenerate()
-  output_arg <- sprintf("/tmp/webppl_output_%s", uid)
-
-  # create --require argument out of each package name
-  if (!is.null(add_packages)) {
-    package_args <- unlist(lapply(add_packages,
-                                  function(x) paste("--require", x)))
-  } else {
-    package_args <- ""
-  }
-
-  # clear paths where rwebppl JS script will write output, errors, or finish file
-  output_file <- output_arg
-  if (file.exists(output_file)) {
-    file.remove(output_file)
-  }
-  error_file <- "/tmp/webppl_error"
-  if (file.exists(error_file)) {
-    file.remove(error_file)
-  }
+  # create tmp files for program code, program output, and finish signal
+  uid <- uuid::UUIDgenerate()  
+  program_file <- sprintf("/tmp/webppl_program_%s", uid)
+  output_file <- sprintf("/tmp/webppl_output_%s", uid)
   finish_file <- sprintf("/tmp/webppl_finished_%s", uid)
-  finish_arg <- finish_file
-  if (file.exists(finish_file)) {
-    file.remove(finish_file)
-  }
+
+  # create args to pass to rwebppl js, including packages
+  program_arg <- sprintf("--programFile %s", program_file)
+  output_arg <- sprintf("--outputFile %s", output_file)
+  finish_arg <- sprintf("--finishFile %s", finish_file)
+  package_args <- ifelse(!is.null(packages), paste('--require', packages), "")
+
+  # write modified_program_code to temporary program_file
+  cat(modified_program_code, file = program_file)
 
   # run rwebppl JS script with model file and packages as arguments
   # any output to stdout gets sent to the R console while command runs
-  system2(script_path, args = c(file_arg, output_arg, finish_arg, package_args),
+  system2(script_path, args = c(program_arg, output_arg, finish_arg, package_args),
           stdout = "", stderr = "", wait = FALSE)
 
-  # wait for output file or error file to exist
+  # wait for finish file to exist
   while (!(file.exists(finish_file))) {
     Sys.sleep(0.25)
   }
