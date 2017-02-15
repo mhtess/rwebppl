@@ -161,53 +161,49 @@ isOptimizeParams <- function(model_output){
 }
 
 tidy_output <- function(model_output, chains = NULL, chain = NULL, inference_opts = NULL) {
-  if (!is.null(names(model_output))) {
-    if (is_probTable(model_output)) {
-      if (class(model_output$support) == "data.frame") {
-        support <- model_output$support
-      } else {
-        support <- data.frame(support = model_output$support)
-      }
-      tidied_output <- cbind(support, data.frame(prob = model_output$probs))
-      tidied_output
-    } else if (
-      (is_mcmc(model_output)) ||  (is_rejection(model_output)) ||
-      ("score" %in% names(model_output))
-      ){ if (is_mcmc(model_output)) {
+  if (is_probTable(model_output)) {
+    if (class(model_output$support) == "data.frame") {
+      support <- model_output$support
+    } else {
+      support <- data.frame(support = model_output$support)
+    }
+    tidied_output <- cbind(support, data.frame(prob = model_output$probs))
+    return(tidied_output)
+  } else if (
+    (is_mcmc(model_output)) ||  (is_rejection(model_output)) ||
+    ("score" %in% names(model_output))
+    ){ if (is_mcmc(model_output)) {
+      tidied_output <- model_output[, names(model_output) != "score",
+                                    drop = FALSE]
+      } else if (is_rejection(model_output)) {
+        tidied_output <- model_output
+      } else if ("score" %in% names(model_output)) {
         tidied_output <- model_output[, names(model_output) != "score",
                                       drop = FALSE]
-        } else if (is_rejection(model_output)) {
-          tidied_output <- model_output
-        } else if ("score" %in% names(model_output)) {
-          tidied_output <- model_output[, names(model_output) != "score",
-                                        drop = FALSE]
-        }
-        names(tidied_output) <- gsub("value.", "", names(tidied_output))
-        num_samples <- ifelse(!(is.null(inference_opts[["samples"]])), 
-                              inference_opts[["samples"]],
-                              ifelse(!(is.null(inference_opts[["particles"]])), 
-                                     inference_opts[["particles"]],
-                                     nrow(tidied_output)))
-        tidied_output$Iteration <- 1:num_samples # as of wp0.9.6, samples come out in the order they were collected
-        ggmcmc_samples <- tidyr::gather_(
-          tidied_output, key_col = "Parameter", value_col = "value",
-          gather_cols = names(tidied_output)[names(tidied_output) != "Iteration"],
-          factor_key = TRUE
-        )
-        ggmcmc_samples$Chain <- chain
-        ggmcmc_samples <- ggmcmc_samples[,c("Iteration", "Chain", "Parameter", "value")] # reorder columns
-        attr(ggmcmc_samples, "nChains") <- chains
-        attr(ggmcmc_samples, "nParameters") <- ncol(tidied_output) - 1
-        attr(ggmcmc_samples, "nIterations") <- num_samples
-        attr(ggmcmc_samples, "nBurnin") <- ifelse(is.null(inference_opts[["burn"]]), 0, inference_opts[["burn"]])
-        attr(ggmcmc_samples, "nThin") <- ifelse(is.null(inference_opts[["thin"]]), 1, inference_opts[["thin"]])
-        attr(ggmcmc_samples, "description") <- ifelse(is.null(inference_opts[["method"]]), "", inference_opts[["method"]])
-        ggmcmc_samples
-    } else {
-      model_output
-    }
+      }
+      names(tidied_output) <- gsub("value.", "", names(tidied_output))
+      num_samples <- ifelse(!(is.null(inference_opts[["samples"]])), 
+                            inference_opts[["samples"]],
+                            ifelse(!(is.null(inference_opts[["particles"]])), 
+                                   inference_opts[["particles"]],
+                                   nrow(tidied_output)))
+      tidied_output$Iteration <- 1:num_samples # as of wp0.9.6, samples come out in the order they were collected
+      ggmcmc_samples <- tidyr::gather_(
+        tidied_output, key_col = "Parameter", value_col = "value",
+        gather_cols = names(tidied_output)[names(tidied_output) != "Iteration"],
+        factor_key = TRUE
+      )
+      ggmcmc_samples$Chain <- chain
+      ggmcmc_samples <- ggmcmc_samples[,c("Iteration", "Chain", "Parameter", "value")] # reorder columns
+      attr(ggmcmc_samples, "nChains") <- chains
+      attr(ggmcmc_samples, "nParameters") <- ncol(tidied_output) - 1
+      attr(ggmcmc_samples, "nIterations") <- num_samples
+      attr(ggmcmc_samples, "nBurnin") <- ifelse(is.null(inference_opts[["burn"]]), 0, inference_opts[["burn"]])
+      attr(ggmcmc_samples, "nThin") <- ifelse(is.null(inference_opts[["thin"]]), 1, inference_opts[["thin"]])
+      attr(ggmcmc_samples, "description") <- ifelse(is.null(inference_opts[["method"]]), "", inference_opts[["method"]])
+      return(ggmcmc_samples)
   } else {
-    model_output
+    return(model_output)
   }
 }
 
@@ -318,14 +314,18 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     Sys.sleep(0.25)
   }
 
-  # if the command produced output, collect and tidy the results
+  # if the command produced non-empty output, collect and tidy the results
   if (file.exists(output_file)) {
     output_string <- paste(readLines(output_file, warn = F),
                            collapse = "\n")
     if (output_string != "") {
       output <- jsonlite::fromJSON(output_string, flatten = TRUE)
-      tidy_output(output, chains = chains,
-                  chain = chain, inference_opts = inference_opts)
+      if (!is.null(names(output))) {
+        return(tidy_output(output, chains = chains,
+                           chain = chain, inference_opts = inference_opts))
+      } else {
+        return(output)
+      }
     }
   }
 }
