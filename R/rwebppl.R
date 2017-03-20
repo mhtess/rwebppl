@@ -295,7 +295,12 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
   program_arg <- sprintf("--programFile %s", program_file)
   output_arg <- sprintf("--outputFile %s", output_file)
   finish_arg <- sprintf("--finishFile %s", finish_file)
-  package_args <- ifelse(!is.null(packages), paste('--require', packages), "")
+  if (!is.null(packages)){
+    package_args <- unlist(lapply(packages,
+                                  function(x){ return( paste('--require', x) ) }))
+  } else {
+    package_args <- ""
+  }
 
   # write modified_program_code to temporary program_file
   cat(modified_program_code, file = program_file)
