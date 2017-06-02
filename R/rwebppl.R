@@ -251,7 +251,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
       dir.create(file.path(tmp_dir, data_var), showWarnings = FALSE)
       cat(sprintf('{"name":"%s","main":"index.js"}', data_var),
           file = file.path(tmp_dir, data_var, "package.json"))
-      data_string <- jsonlite::toJSON(data)
+      data_string <- jsonlite::toJSON(data, digits = NA)
       cat(sprintf("module.exports = JSON.parse('%s')", data_string),
           file = file.path(tmp_dir, data_var, "index.js"))
       packages <- c(packages, file.path(tmp_dir, data_var))
