@@ -18,4 +18,3 @@ Uninstall an npm package from webppl's global installation.
 \examples{
 \dontrun{uninstall_webppl_package("babyparse")}
 }
-

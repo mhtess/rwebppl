@@ -18,4 +18,3 @@ Install an npm package to webppl's global installation.
 \examples{
 \dontrun{install_webppl_package("babyparse")}
 }
-

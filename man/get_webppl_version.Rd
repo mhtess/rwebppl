@@ -12,4 +12,3 @@ Prints out version of webppl
 \examples{
 \dontrun{get_webppl_version()}
 }
-

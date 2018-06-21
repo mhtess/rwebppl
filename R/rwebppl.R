@@ -22,8 +22,8 @@ clean_webppl <- function() {
 }
 
 #' Installs webppl locally
-#' 
-#' Supports both official npm release versions (e.g. '0.9.6') and 
+#'
+#' Supports both official npm release versions (e.g. '0.9.6') and
 #' also commit hashes from the github repository for custom configurations
 #' @param webppl_version official npm tag or commit hash
 #' @return NULL
@@ -143,7 +143,7 @@ get_samples <- function(df, num_samples) {
 }
 
 is_mcmc <- function(output) {
-  ((names(output)[1] == "score") & 
+  ((names(output)[1] == "score") &
      all(grepl("value", names(output)[2:length(names(output))])))
 }
 
@@ -188,7 +188,7 @@ tidy_sampleList <- function(output, chains, chain, inference_opts) {
   names(output) <- gsub("value.", "", names(output))
   num_samples <- countSamples(output, inference_opts)
   # as of webppl v0.9.6, samples come out in the order they were collected
-  output$Iteration <- 1:num_samples 
+  output$Iteration <- 1:num_samples
   ggmcmc_samples <- tidyr::gather_(
     output, key_col = "Parameter", value_col = "value",
     gather_cols = names(output)[names(output) != "Iteration"],
@@ -210,9 +210,9 @@ tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NU
     return(tidy_probTable(output))
   } else if (is_sampleList(output)) {
     # Drop redundant score column, if it exists
-    if ("score" %in% names(output)) { 
+    if ("score" %in% names(output)) {
       output <- output[, names(output) != 'score', drop = F]
-    } 
+    }
     return(tidy_sampleList(output, chains, chain, inference_opts))
   } else {
     return(output)
@@ -286,7 +286,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
   }
 
   # create tmp files for program code, program output, and finish signal
-  uid <- uuid::UUIDgenerate()  
+  uid <- uuid::UUIDgenerate()
   program_file <- sprintf("/tmp/webppl_program_%s", uid)
   output_file <- sprintf("/tmp/webppl_output_%s", uid)
   finish_file <- sprintf("/tmp/webppl_finished_%s", uid)
@@ -348,8 +348,10 @@ globalVariables("i")
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' program_code <- "flip(0.5)"
 #' webppl(program_code)
+#' }
 webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                    data_var = NULL, packages = NULL, model_var = NULL,
                    inference_opts = NULL, chains = 1, cores = 1) {
@@ -370,4 +372,21 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     chain_outputs <- foreach::foreach(i = 1:chains) %dopar% run_fun(i)
     Reduce(rbind, chain_outputs)
   }
+}
+
+#' Kill rwebppl processes
+#'
+#' @param pid (optional) Vector of process IDs to kill (defaults to killing all
+#'   rwebppl processes)
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{kill_webppl()}
+#' \dontrun{kill_webppl(6939)}
+kill_webppl <- function(pids = NULL) {
+  if (is.null(pids)){
+    pids <- system2("pgrep", args = c("-f", "webppl_program"), stdout = T)
+  }
+  tools::pskill(pids)
 }

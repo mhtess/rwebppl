@@ -37,7 +37,8 @@ The program's return value(s).
 Runs a webppl program.
 }
 \examples{
+\dontrun{
 program_code <- "flip(0.5)"
 webppl(program_code)
 }
-
+}
