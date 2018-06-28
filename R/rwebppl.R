@@ -236,7 +236,7 @@ tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NU
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
 run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
-                       data_var = NULL, packages = NULL, model_var = NULL,
+                       data_var = "data", packages = NULL, model_var = NULL,
                        inference_opts = NULL, chains = NULL, random_seed = NULL,
                        chain = 1) {
 
@@ -245,18 +245,14 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
   # if data supplied, create a webppl package that exports the data as data_var
   if (!is.null(data)) {
-    if (is.null(data_var)) {
-      warning("ignoring data (supplied without data_var)")
-    } else {
-      tmp_dir <- tempdir()
-      dir.create(file.path(tmp_dir, data_var), showWarnings = FALSE)
-      cat(sprintf('{"name":"%s","main":"index.js"}', data_var),
-          file = file.path(tmp_dir, data_var, "package.json"))
-      data_string <- jsonlite::toJSON(data, digits = NA)
-      cat(sprintf("module.exports = JSON.parse('%s')", data_string),
-          file = file.path(tmp_dir, data_var, "index.js"))
-      packages <- c(packages, file.path(tmp_dir, data_var))
-    }
+    tmp_dir <- tempdir()
+    dir.create(file.path(tmp_dir, data_var), showWarnings = FALSE)
+    cat(sprintf('{"name":"%s","main":"index.js"}', data_var),
+        file = file.path(tmp_dir, data_var, "package.json"))
+    data_string <- jsonlite::toJSON(data, digits = NA)
+    cat(sprintf("module.exports = JSON.parse('%s')", data_string),
+        file = file.path(tmp_dir, data_var, "index.js"))
+    packages <- c(packages, file.path(tmp_dir, data_var))
   }
 
   # set modified_program_code to program_code or to contents of program_file
@@ -360,7 +356,7 @@ globalVariables("i")
 #' webppl(program_code)
 #' }
 webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
-                   data_var = NULL, packages = NULL, model_var = NULL,
+                   data_var = "data", packages = NULL, model_var = NULL,
                    inference_opts = NULL, random_seed = NULL, chains = 1, cores = 1) {
 
   run_fun <- function(k) run_webppl(program_code = program_code,
