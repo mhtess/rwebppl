@@ -46,6 +46,10 @@ install_webppl <- function(webppl_version) {
     rwebppl_meta <- jsonlite::fromJSON(readLines(rwebppl_json))
     rwebppl_meta$dependencies$webppl <- webppl_version
     webppl_json <- file.path(rwebppl_path(), "js", "package.json")
+    
+    # Executable bit should be tracked by git but chmod just in case
+    system2('chmod', args = c('+x', file.path(rwebppl_path(), "bash", "*")))
+        
     writeLines(jsonlite::toJSON(rwebppl_meta, auto_unbox = TRUE, pretty = TRUE),
                webppl_json)
     system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
