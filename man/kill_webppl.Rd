@@ -7,7 +7,7 @@
 kill_webppl(pids = NULL)
 }
 \arguments{
-\item{pid}{(optional) Vector of process IDs to kill (defaults to killing all
+\item{pids}{(optional) Vector of process IDs to kill (defaults to killing all
 rwebppl processes)}
 }
 \description{

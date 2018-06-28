@@ -5,7 +5,7 @@
 \title{webppl}
 \usage{
 run_webppl(program_code = NULL, program_file = NULL, data = NULL,
-  data_var = NULL, packages = NULL, model_var = NULL,
+  data_var = "data", packages = NULL, model_var = "model",
   inference_opts = NULL, chains = NULL, random_seed = NULL, chain = 1)
 }
 \arguments{
