@@ -232,11 +232,12 @@ tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NU
 #' @param model_var The name by which the model be referenced in the program.
 #' @param inference_opts Options for inference
 #' (see http://webppl.readthedocs.io/en/master/inference.html)
+#' @param random_seed Seed for random number generator
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
 run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                        data_var = NULL, packages = NULL, model_var = NULL,
-                       inference_opts = NULL, chains = NULL,
+                       inference_opts = NULL, chains = NULL, random_seed = NULL,
                        chain = 1) {
 
   # find location of rwebppl JS script, within rwebppl R package
@@ -295,6 +296,12 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
   program_arg <- sprintf("--programFile %s", program_file)
   output_arg <- sprintf("--outputFile %s", output_file)
   finish_arg <- sprintf("--finishFile %s", finish_file)
+  if (!is.null(random_seed)) {
+    seed_arg <- sprintf("--random-seed %s", random_seed)
+  } else {
+    seed_arg <- ""
+  }
+
   if (!is.null(packages)){
     package_args <- unlist(lapply(packages,
                                   function(x){ return( paste('--require', x) ) }))
@@ -307,7 +314,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
   # run rwebppl JS script with model file and packages as arguments
   # any output to stdout gets sent to the R console while command runs
-  system2(script_path, args = c(program_arg, output_arg, finish_arg, package_args),
+  system2(script_path, args = c(program_arg, output_arg, finish_arg, package_args, seed_arg),
           stdout = "", stderr = "", wait = FALSE)
 
   # wait for finish file to exist
@@ -354,7 +361,7 @@ globalVariables("i")
 #' }
 webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                    data_var = NULL, packages = NULL, model_var = NULL,
-                   inference_opts = NULL, chains = 1, cores = 1) {
+                   inference_opts = NULL, random_seed = NULL, chains = 1, cores = 1) {
 
   run_fun <- function(k) run_webppl(program_code = program_code,
                                     program_file = program_file,
@@ -363,6 +370,7 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                                     packages = packages,
                                     model_var = model_var,
                                     inference_opts = inference_opts,
+                                    random_seed = random_seed,
                                     chains = chains,
                                     chain = k)
   if (chains == 1) {

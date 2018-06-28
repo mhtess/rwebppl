@@ -6,7 +6,7 @@
 \usage{
 run_webppl(program_code = NULL, program_file = NULL, data = NULL,
   data_var = NULL, packages = NULL, model_var = NULL,
-  inference_opts = NULL, chains = NULL, chain = 1)
+  inference_opts = NULL, chains = NULL, random_seed = NULL, chain = 1)
 }
 \arguments{
 \item{program_code}{A string of a webppl program.}
@@ -26,6 +26,8 @@ referenced in the program.}
 (see http://webppl.readthedocs.io/en/master/inference.html)}
 
 \item{chains}{Number of chains (this run is one chain).}
+
+\item{random_seed}{Seed for random number generator}
 
 \item{chain}{Chain number of this run.}
 }
