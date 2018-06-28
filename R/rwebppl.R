@@ -236,7 +236,7 @@ tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NU
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
 run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
-                       data_var = "data", packages = NULL, model_var = NULL,
+                       data_var = "data", packages = NULL, model_var = "model",
                        inference_opts = NULL, chains = NULL, random_seed = NULL,
                        chain = 1) {
 
@@ -271,11 +271,8 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     stop("supply one of program_code or program_file")
   }
 
-  # if inference_opts and model_var supplied, add an Infer call to the program
+  # if inference_opts supplied, add an Infer call to the program
   if (!is.null(inference_opts)) {
-    if (is.null(model_var)) {
-      stop("when supplying inference_opts, you must also supply model_var")
-    }
     infer <- sprintf("Infer(JSON.parse('%s'), %s)",
                      jsonlite::toJSON(inference_opts, auto_unbox = TRUE),
                      model_var)
@@ -356,7 +353,7 @@ globalVariables("i")
 #' webppl(program_code)
 #' }
 webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
-                   data_var = "data", packages = NULL, model_var = NULL,
+                   data_var = "data", packages = NULL, model_var = "model",
                    inference_opts = NULL, random_seed = NULL, chains = 1, cores = 1) {
 
   run_fun <- function(k) run_webppl(program_code = program_code,
@@ -380,7 +377,7 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
 #' Kill rwebppl processes
 #'
-#' @param pid (optional) Vector of process IDs to kill (defaults to killing all
+#' @param pids (optional) Vector of process IDs to kill (defaults to killing all
 #'   rwebppl processes)
 #'
 #' @export
