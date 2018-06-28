@@ -6,7 +6,8 @@
 \usage{
 webppl(program_code = NULL, program_file = NULL, data = NULL,
   data_var = "data", packages = NULL, model_var = "model",
-  inference_opts = NULL, random_seed = NULL, chains = 1, cores = 1)
+  inference_opts = NULL, random_seed = NULL, sort_by = "prob",
+  chains = 1, cores = 1)
 }
 \arguments{
 \item{program_code}{A string of a webppl program.}
@@ -26,6 +27,8 @@ referenced in the program.}
 (see http://webppl.readthedocs.io/en/master/inference.html)}
 
 \item{random_seed}{Seed for random number generator}
+
+\item{sort_by}{Sort probability table by probability or support (enumeration only)}
 
 \item{chains}{Number of times to run the program (defaults to 1).}
 
