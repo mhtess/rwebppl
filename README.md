@@ -9,11 +9,9 @@ RWebPPL is an R package providing an interface to [WebPPL](https://github.com/pr
 #### System requirements
 + Linux, Mac, or Windows 10
 + [R v3.3](https://cran.cnr.berkeley.edu) (in RStudio, type `version`)
-+ [node](https://nodejs.org/en/) v4.4.5 or higher (in Terminal/Windows PowerShell/Command Prompt, type `node --version`; close and re-open CLI after install)
-+ [npm](https://docs.npmjs.com/getting-started/installing-node) v3.6 or higher (in Terminal/Windows PowerShell/Command Prompt, type `npm --version`; if it's not >= v3.6; try `sudo npm install npm -g`, close and reopen CLI and check version)
++ [node](https://nodejs.org/en/) v4.4.5 or higher (in Terminal/Windows PowerShell/Command Prompt, type `node --version`; close and re-open your command-line interface after install)
++ [npm](https://docs.npmjs.com/getting-started/installing-node) v3.6 or higher (in Terminal/Windows PowerShell/Command Prompt, type `npm --version`; if it's not >= v3.6; try `sudo npm install npm -g`, close and reopen your command-line interface and check version)
 + devtools R library: in R: `install.packages('devtools')`
-
-RWebPPL always installs its own local version of WebPPL for stability: by default, it will install the most recent, compatible release. Advanced users may use the `install_webppl()` function to override this default to install from any official NPM release tag (e.g. '0.9.7') or any commit hash from the WebPPL github repository.
 
 #### For Linux/Mac users
 
@@ -24,7 +22,9 @@ devtools::install_github("mhtess/rwebppl")
 #### For Windows 10 users
 
 1. Clone/download this repository anywhere on your machine
-2. Open RStudio and enter `install.packages(path_to_repository, repos=NULL, type="source")` where path_to_repository is the location to where you cloned the repository
+2. Open RStudio and enter `install.packages(path_to_repository, repos=NULL, type="source")` where path_to_repository points to your download
+
+RWebPPL always installs its own local version of WebPPL for stability: by default, it will install the most recent, compatible release. Advanced users may use the `install_webppl()` function to override this default to install from any official NPM release tag (e.g. '0.9.7') or any commit hash from the WebPPL github repository.
 
 ## Usage
 
