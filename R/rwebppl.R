@@ -56,8 +56,13 @@ install_webppl <- function(webppl_version) {
     clean_webppl()
   }
   message("installing webppl ...", appendLF = FALSE)
-  npm_info <- system2("npm", args = c("info", "webppl", "versions", "--json"),
-                      stdout = TRUE)
+  if (system_os() == "Windows") {
+    npm_info <- system("npm info webppl versions --json")
+  }
+  else { 
+    npm_info <- system2("npm", args = c("info", "webppl", "versions", "--json"),
+                        stdout = TRUE)
+  }
   npm_versions <- jsonlite::fromJSON(paste(npm_info, collapse = ""))
   if (webppl_version %in% npm_versions) {
     rwebppl_json <- file.path(rwebppl_path(), "json", "rwebppl.json")
