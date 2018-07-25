@@ -89,9 +89,9 @@ install_webppl <- function(webppl_version) {
   } else {
     # This doesn't work for Windows yet
     if (system_os() == "Windows") {
-      # system(paste("powershell -ExecutionPolicy ByPass -File", 
-      #              paste("\"", file.path(rwebppl_path(), "powershell", "install-dev-webppl.ps1"), "\"", sep=""), 
-      #              paste("\"", rwebppl_path(), "\"", sep=""), webppl_version))
+      system(paste("powershell -ExecutionPolicy ByPass -File", 
+                   paste("\"", file.path(rwebppl_path(), "powershell", "install-dev-webppl.ps1"), "\"", sep=""), 
+                   paste("\"", rwebppl_path(), "\"", sep=""), webppl_version))
     }
     else {
       system2(file.path(rwebppl_path(), "bash", "install-dev-webppl.sh"),
