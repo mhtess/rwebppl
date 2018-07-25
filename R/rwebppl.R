@@ -121,7 +121,7 @@ check_webppl <- function() {
 get_webppl_version <- function() {
   if (file_exists(webppl_executable())) {
     if (system_os() == "Windows") {
-      version_str <- substr(system(paste("node", paste("\"", webppl_executable(), "\"", sep=""), "--version"), intern = T), 1, 6) 
+      version_str <- system(paste("node", paste("\"", webppl_executable(), "\"", sep=""), "--version"), intern = T) 
     }
     else {
       version_str <- system2(webppl_executable(), args = c("--version"), stdout = T)  
