@@ -21,7 +21,9 @@ RWebPPL always installs its own local version of WebPPL for stability: by defaul
 
 ## Primary features
 
-#### Running models from R
+For a complete introduction to RWebPPL's functionality, see [this introduction](https://github.com/mhtess/rwebppl/wiki/Introduction). 
+
+### Running models from R
 
 Write a model as a string in R:
 
@@ -43,39 +45,34 @@ Or write a model in an external file:
 webppl(program_file = "path/to/model/model.wppl")
 ```
 
-#### Passing data to WebPPL from R
+### Passing data to WebPPL from R
 
 Data can be passed directly from R to WebPPL as in:
 
 ```
-my_model <- "
-var model = function () {
- var a = flip(0.3)
- var b = flip(0.6)
- var scores = map( function(d) {
- 	return a + b - d
- }, myDF)
- return scores
-}
-model()
-"
+my_model <- '
+    var model = function(){
+        var p = uniform(0, 1)
+        map(function(d){
+           observe(Binomial({n: d.n, p: p}), d.k)
+        }, myDF)
+	return p
+    }
+    model()
+'
 
-webppl(my_model,
-	   data = df,
-	   data_var = "myDF")
+webppl(my_model, data = df, data_var = "myDF")
 ```
 
-In this example, `myDF` is not defined inside the WebPPL program, but is passed into it from R, using `data = df`. The argument `data_var` tells WebPPL what the data should be called.
+In this example, `myDF` is not defined inside the WebPPL program, but is passed into it from R, using `data = df`. The argument `data_var` tells WebPPL what the data should be called. If unspecified, `data_var` will default to `"data"`.
 
-#### Running multiple chains (in parallel)
+### Running multiple chains (in parallel)
 
 ```
 webppl(my_model, chains = 3, cores = 3)
 ```
 
-#### Other options
+### Other options
 
 - specifying inference options in R
 - setting a random seed in R
-
-For a complete introduction to RWebPPL's functionality, see [this introduction](https://github.com/mhtess/rwebppl/wiki/Introduction). 
