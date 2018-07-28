@@ -5,8 +5,9 @@
 \title{webppl}
 \usage{
 run_webppl(program_code = NULL, program_file = NULL, data = NULL,
-  data_var = NULL, packages = NULL, model_var = NULL,
-  inference_opts = NULL, chains = NULL, chain = 1)
+  data_var = "data", packages = NULL, model_var = "model",
+  inference_opts = NULL, chains = NULL, random_seed = NULL,
+  sort_by = "prob", chain = 1)
 }
 \arguments{
 \item{program_code}{A string of a webppl program.}
@@ -27,9 +28,12 @@ referenced in the program.}
 
 \item{chains}{Number of chains (this run is one chain).}
 
+\item{random_seed}{Seed for random number generator}
+
+\item{sort_by}{Sort probability table by probability or support (enumeration only)}
+
 \item{chain}{Chain number of this run.}
 }
 \description{
 Runs a webppl program.
 }
-

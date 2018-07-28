@@ -24,4 +24,3 @@ num_samples <- 10
 df <- data.frame(prob = c(0.1, 0.3, 0.5, 0.1), support = c("a","b","c","d"))
 get_samples(df, num_samples)
 }
-

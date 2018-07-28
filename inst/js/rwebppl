@@ -43,6 +43,13 @@ function main() {
     pkg.headers.forEach(webppl.requireHeader);
   });
 
+  // Random seed
+  var seed = argv['random-seed'];
+  if (seed !== undefined) {
+    util.assertValidRandomSeed(seed);
+    util.seedRNG(seed);
+  }
+
   webppl.run(code, function(s,x) {
     writeWebPPLValue(x, argv.outputFile);
   }, {

@@ -22,8 +22,8 @@ clean_webppl <- function() {
 }
 
 #' Installs webppl locally
-#' 
-#' Supports both official npm release versions (e.g. '0.9.6') and 
+#'
+#' Supports both official npm release versions (e.g. '0.9.6') and
 #' also commit hashes from the github repository for custom configurations
 #' @param webppl_version official npm tag or commit hash
 #' @return NULL
@@ -46,6 +46,10 @@ install_webppl <- function(webppl_version) {
     rwebppl_meta <- jsonlite::fromJSON(readLines(rwebppl_json))
     rwebppl_meta$dependencies$webppl <- webppl_version
     webppl_json <- file.path(rwebppl_path(), "js", "package.json")
+
+    # Executable bit should be tracked by git but chmod just in case
+    system2('chmod', args = c('+x', file.path(rwebppl_path(), "bash", "*")))
+
     writeLines(jsonlite::toJSON(rwebppl_meta, auto_unbox = TRUE, pretty = TRUE),
                webppl_json)
     system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
@@ -143,7 +147,7 @@ get_samples <- function(df, num_samples) {
 }
 
 is_mcmc <- function(output) {
-  ((names(output)[1] == "score") & 
+  ((names(output)[1] == "score") &
      all(grepl("value", names(output)[2:length(names(output))])))
 }
 
@@ -175,20 +179,25 @@ countSamples <- function(output, inference_opts) {
   }
 }
 
-tidy_probTable <- function(output) {
+tidy_probTable <- function(output, sort_by) {
   if (class(output$support) == "data.frame") {
     support <- output$support
   } else {
     support <- data.frame(support = output$support)
   }
-  return(cbind(support, data.frame(prob = output$probs)))
+  unsorted_probTable <- cbind(support, data.frame(prob = output$probs))
+  if (sort_by == "prob") {
+    return(unsorted_probTable[with(unsorted_probTable, order(-prob)), ])
+  } else {
+    return(unsorted_probTable[with(unsorted_probTable, order(support)), ])
+  }
 }
 
 tidy_sampleList <- function(output, chains, chain, inference_opts) {
   names(output) <- gsub("value.", "", names(output))
   num_samples <- countSamples(output, inference_opts)
   # as of webppl v0.9.6, samples come out in the order they were collected
-  output$Iteration <- 1:num_samples 
+  output$Iteration <- 1:num_samples
   ggmcmc_samples <- tidyr::gather_(
     output, key_col = "Parameter", value_col = "value",
     gather_cols = names(output)[names(output) != "Iteration"],
@@ -205,14 +214,14 @@ tidy_sampleList <- function(output, chains, chain, inference_opts) {
   return(ggmcmc_samples)
 }
 
-tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NULL) {
+tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NULL, sort_by = NULL) {
   if (is_probTable(output)) {
-    return(tidy_probTable(output))
+    return(tidy_probTable(output, sort_by = sort_by))
   } else if (is_sampleList(output)) {
     # Drop redundant score column, if it exists
-    if ("score" %in% names(output)) { 
+    if ("score" %in% names(output)) {
       output <- output[, names(output) != 'score', drop = F]
-    } 
+    }
     return(tidy_sampleList(output, chains, chain, inference_opts))
   } else {
     return(output)
@@ -232,30 +241,28 @@ tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NU
 #' @param model_var The name by which the model be referenced in the program.
 #' @param inference_opts Options for inference
 #' (see http://webppl.readthedocs.io/en/master/inference.html)
+#' @param random_seed Seed for random number generator
+#' @param sort_by Sort probability table by probability or support (enumeration only)
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
 run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
-                       data_var = NULL, packages = NULL, model_var = NULL,
-                       inference_opts = NULL, chains = NULL,
-                       chain = 1) {
+                       data_var = "data", packages = NULL, model_var = "model",
+                       inference_opts = NULL, chains = NULL, random_seed = NULL,
+                       sort_by = "prob", chain = 1) {
 
   # find location of rwebppl JS script, within rwebppl R package
   script_path <- file.path(rwebppl_path(), "js/rwebppl")
 
   # if data supplied, create a webppl package that exports the data as data_var
   if (!is.null(data)) {
-    if (is.null(data_var)) {
-      warning("ignoring data (supplied without data_var)")
-    } else {
-      tmp_dir <- tempdir()
-      dir.create(file.path(tmp_dir, data_var), showWarnings = FALSE)
-      cat(sprintf('{"name":"%s","main":"index.js"}', data_var),
-          file = file.path(tmp_dir, data_var, "package.json"))
-      data_string <- jsonlite::toJSON(data, digits = NA)
-      cat(sprintf("module.exports = JSON.parse('%s')", data_string),
-          file = file.path(tmp_dir, data_var, "index.js"))
-      packages <- c(packages, file.path(tmp_dir, data_var))
-    }
+    tmp_dir <- tempdir()
+    dir.create(file.path(tmp_dir, data_var), showWarnings = FALSE)
+    cat(sprintf('{"name":"%s","main":"index.js"}', data_var),
+        file = file.path(tmp_dir, data_var, "package.json"))
+    data_string <- jsonlite::toJSON(data, digits = NA)
+    cat(sprintf("module.exports = JSON.parse('%s')", data_string),
+        file = file.path(tmp_dir, data_var, "index.js"))
+    packages <- c(packages, file.path(tmp_dir, data_var))
   }
 
   # set modified_program_code to program_code or to contents of program_file
@@ -274,11 +281,8 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     stop("supply one of program_code or program_file")
   }
 
-  # if inference_opts and model_var supplied, add an Infer call to the program
+  # if inference_opts supplied, add an Infer call to the program
   if (!is.null(inference_opts)) {
-    if (is.null(model_var)) {
-      stop("when supplying inference_opts, you must also supply model_var")
-    }
     infer <- sprintf("Infer(JSON.parse('%s'), %s)",
                      jsonlite::toJSON(inference_opts, auto_unbox = TRUE),
                      model_var)
@@ -286,7 +290,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
   }
 
   # create tmp files for program code, program output, and finish signal
-  uid <- uuid::UUIDgenerate()  
+  uid <- uuid::UUIDgenerate()
   program_file <- sprintf("/tmp/webppl_program_%s", uid)
   output_file <- sprintf("/tmp/webppl_output_%s", uid)
   finish_file <- sprintf("/tmp/webppl_finished_%s", uid)
@@ -295,6 +299,12 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
   program_arg <- sprintf("--programFile %s", program_file)
   output_arg <- sprintf("--outputFile %s", output_file)
   finish_arg <- sprintf("--finishFile %s", finish_file)
+  if (!is.null(random_seed)) {
+    seed_arg <- sprintf("--random-seed %s", random_seed)
+  } else {
+    seed_arg <- ""
+  }
+
   if (!is.null(packages)){
     package_args <- unlist(lapply(packages,
                                   function(x){ return( paste('--require', x) ) }))
@@ -307,7 +317,7 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
   # run rwebppl JS script with model file and packages as arguments
   # any output to stdout gets sent to the R console while command runs
-  system2(script_path, args = c(program_arg, output_arg, finish_arg, package_args),
+  system2(script_path, args = c(program_arg, output_arg, finish_arg, package_args, seed_arg),
           stdout = "", stderr = "", wait = FALSE)
 
   # wait for finish file to exist
@@ -323,7 +333,8 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
       output <- jsonlite::fromJSON(output_string, flatten = TRUE)
       if (!is.null(names(output))) {
         return(tidy_output(output, chains = chains,
-                           chain = chain, inference_opts = inference_opts))
+                           chain = chain, inference_opts = inference_opts,
+                           sort_by = sort_by))
       } else {
         return(output)
       }
@@ -348,11 +359,13 @@ globalVariables("i")
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' program_code <- "flip(0.5)"
 #' webppl(program_code)
+#' }
 webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
-                   data_var = NULL, packages = NULL, model_var = NULL,
-                   inference_opts = NULL, chains = 1, cores = 1) {
+                   data_var = "data", packages = NULL, model_var = "model",
+                   inference_opts = NULL, random_seed = NULL, sort_by = "prob", chains = 1, cores = 1) {
 
   run_fun <- function(k) run_webppl(program_code = program_code,
                                     program_file = program_file,
@@ -361,6 +374,8 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                                     packages = packages,
                                     model_var = model_var,
                                     inference_opts = inference_opts,
+                                    random_seed = random_seed,
+                                    sort_by = sort_by,
                                     chains = chains,
                                     chain = k)
   if (chains == 1) {
@@ -370,4 +385,21 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
     chain_outputs <- foreach::foreach(i = 1:chains) %dopar% run_fun(i)
     Reduce(rbind, chain_outputs)
   }
+}
+
+#' Kill rwebppl processes
+#'
+#' @param pids (optional) Vector of process IDs to kill (defaults to killing all
+#'   rwebppl processes)
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{kill_webppl()}
+#' \dontrun{kill_webppl(6939)}
+kill_webppl <- function(pids = NULL) {
+  if (is.null(pids)){
+    pids <- system2("pgrep", args = c("-f", "webppl_program"), stdout = T)
+  }
+  tools::pskill(pids)
 }
