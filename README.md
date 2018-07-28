@@ -58,7 +58,7 @@ my_model <- '
         }, myDF)
 	return p
     }
-    model()
+    Infer({model: model, method: "MCMC"})
 '
 
 webppl(my_model, data = df, data_var = "myDF")
