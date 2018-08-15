@@ -7,10 +7,10 @@ RWebPPL is an R package providing an interface to [WebPPL](https://github.com/pr
 ## Installation
 
 #### System requirements
-+ Mac or Linux OS [Windows currently not supported]
++ Linux, Mac, or Windows 10
 + [R v3.3](https://cran.cnr.berkeley.edu) (in RStudio, type `version`)
-+ [node](https://nodejs.org/en/) v4.4.5 or higher (in Terminal, type `node --version`; close and re-open terminal after install)
-+ [npm](https://docs.npmjs.com/getting-started/installing-node) v3.6 or higher (in Terminal, type `npm --version`; if it's not >= v3.6; try `sudo npm install npm -g`, close and reopen terminal and check version)
++ [node](https://nodejs.org/en/) v4.4.5 or higher (in your command-line interface (CLI; e.g., Terminal/Windows PowerShell/Command Prompt), type `node --version`; close and re-open your CLI after install)
++ [npm](https://docs.npmjs.com/getting-started/installing-node) v3.6 or higher (in your CLI, type `npm --version`; if it's not >= v3.6; try `sudo npm install npm -g`, close and reopen your CLI and check version)
 + devtools R library: in R: `install.packages('devtools')`
 
 ```

@@ -1,3 +1,6 @@
+# Determine the shell/scripts to use based on user OS
+system_os <- function() Sys.info()["sysname"]
+
 # Path to rwebppl R package
 rwebppl_path <- function() system.file(package = "rwebppl")
 
@@ -10,15 +13,30 @@ global_pkg_path <- function() path.expand("~/.webppl")
 
 # Internal function that checks whether a file exists
 file_exists <- function(path) {
-  args <- c("!", "-e", path, ";", "echo", "$?")
-  existsFlag <- suppressWarnings(system2("test", args = args, stdout = T))
-  return(existsFlag == 1)
+  if (system_os() == "Windows") {
+    args <- c(path)
+    existsFlag <- suppressWarnings(
+      system(paste("powershell -ExecutionPolicy ByPass -Command Test-Path",
+                   paste("\"'", args, "'\"", sep="")), intern = T))
+    existsFlag <- ifelse(existsFlag == "True", 1, 0)
+    return(existsFlag == 1)
+  }
+  else {
+    args <- c("!", "-e", path, ";", "echo", "$?")
+    existsFlag <- suppressWarnings(system2("test", args = args, stdout = T))
+    return(existsFlag == 1)  
+  }
 }
 
 # Internal function that cleans the local webppl install
 clean_webppl <- function() {
   message("cleaning old version... ", appendLF = FALSE)
-  system2("rm", args = c('-r', webppl_install()))
+  if (system_os() == "Windows") {
+    system(paste("powershell -ExecutionPolicy ByPass -Command rm -r", webppl_install()))
+  }
+  else {
+    system2("rm", args = c('-r', webppl_install()))  
+  }
 }
 
 #' Installs webppl locally
@@ -33,32 +51,53 @@ clean_webppl <- function() {
 #' \dontrun{install_webppl('0.9.6')}
 #' \dontrun{install_webppl('4bd2452333d24c122aee98c3206584bc39c6096a')}
 install_webppl <- function(webppl_version) {
-  # first, clean up any webppl version that might already exist
+  # First, clean up any webppl version that might already exist
   if(file_exists(webppl_executable())) {
     clean_webppl()
   }
   message("installing webppl ...", appendLF = FALSE)
-  npm_info <- system2("npm", args = c("info", "webppl", "versions", "--json"),
-                      stdout = TRUE)
+  if (system_os() == "Windows") {
+    npm_info <- system("npm info webppl versions --json", intern = TRUE)
+  }
+  else { 
+    npm_info <- system2("npm", args = c("info", "webppl", "versions", "--json"),
+                        stdout = TRUE)
+  }
   npm_versions <- jsonlite::fromJSON(paste(npm_info, collapse = ""))
   if (webppl_version %in% npm_versions) {
     rwebppl_json <- file.path(rwebppl_path(), "json", "rwebppl.json")
     rwebppl_meta <- jsonlite::fromJSON(readLines(rwebppl_json))
     rwebppl_meta$dependencies$webppl <- webppl_version
     webppl_json <- file.path(rwebppl_path(), "js", "package.json")
-
-    # Executable bit should be tracked by git but chmod just in case
-    system2('chmod', args = c('+x', file.path(rwebppl_path(), "bash", "*")))
-
     writeLines(jsonlite::toJSON(rwebppl_meta, auto_unbox = TRUE, pretty = TRUE),
                webppl_json)
-    system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
-            args = rwebppl_path())
-    system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
-            args = rwebppl_path())
+    if (system_os() == "Windows") {
+      system(paste("powershell -ExecutionPolicy ByPass -File", 
+                   paste("\"", file.path(rwebppl_path(), "powershell", "install-webppl.ps1"), "\"", sep=""), 
+                   paste("\"", rwebppl_path(), "\"", sep="")))
+      system(paste("powershell -ExecutionPolicy ByPass -File", 
+                   paste("\"", file.path(rwebppl_path(), "powershell", "rearrange-webppl.ps1"), "\"", sep=""), 
+                   paste("\"", rwebppl_path(), "\"", sep="")))
+    }
+    else {
+      system2(file.path(rwebppl_path(), "bash", "install-webppl.sh"),
+              args = rwebppl_path())
+      system2(file.path(rwebppl_path(), "bash", "rearrange-webppl.sh"),
+              args = rwebppl_path())
+    }
+    
   } else {
-    system2(file.path(rwebppl_path(), "bash", "install-dev-webppl.sh"),
-            args = c(rwebppl_path(), webppl_version))
+    # This doesn't work for Windows yet
+    if (system_os() == "Windows") {
+      system(paste("powershell -ExecutionPolicy ByPass -File", 
+                   paste("\"", file.path(rwebppl_path(), "powershell", "install-dev-webppl.ps1"), "\"", sep=""), 
+                   paste("\"", rwebppl_path(), "\"", sep=""), webppl_version))
+    }
+    else {
+      system2(file.path(rwebppl_path(), "bash", "install-dev-webppl.sh"),
+              args = c(rwebppl_path(), webppl_version))
+    }
+    
   }
   message(" done")
 }
@@ -81,9 +120,15 @@ check_webppl <- function() {
 #' \dontrun{get_webppl_version()}
 get_webppl_version <- function() {
   if (file_exists(webppl_executable())) {
-    version_str <- system2(webppl_executable(), args = c("--version"), stdout = T)
+    if (system_os() == "Windows") {
+      version_str <- system(paste("node", paste("\"", webppl_executable(), "\"", sep=""), "--version"), intern = T) 
+    }
+    else {
+      version_str <- system2(webppl_executable(), args = c("--version"), stdout = T)  
+    }
     message(paste("using webppl version:", version_str))
-  } else {
+  } 
+  else {
     warning("couldn't find local webppl install")
   }
 }
@@ -106,8 +151,16 @@ get_webppl_version <- function() {
 #' @examples
 #' \dontrun{install_webppl_package("babyparse")}
 install_webppl_package <- function(package_name, path = global_pkg_path()) {
-  system2(file.path(rwebppl_path(), "bash", "install_package.sh"),
-          args = c(path, package_name, rwebppl_path()))
+  if (system_os() == "Windows") {
+    system(paste("powershell -ExecutionPolicy ByPass -File", 
+                 paste("\"", file.path(rwebppl_path(), "powershell", "install-package.ps1"), "\"", sep=""), 
+                 paste("\"", path, "\"", sep=""), package_name, 
+                 paste("\"", rwebppl_path(), "\"", sep="")))
+  }
+  else {
+    system2(file.path(rwebppl_path(), "bash", "install_package.sh"),
+            args = c(path, package_name, rwebppl_path()))
+  }
 }
 
 #' Uninstall webppl package
@@ -121,8 +174,16 @@ install_webppl_package <- function(package_name, path = global_pkg_path()) {
 #' @examples
 #' \dontrun{uninstall_webppl_package("babyparse")}
 uninstall_webppl_package <- function(package_name, path = global_pkg_path()) {
-  system2(file.path(rwebppl_path(), "bash", "uninstall_package.sh"),
-          args = c(path, package_name))
+  if (system_os == "Windows") {
+    system(paste("powershell -ExecutionPolicy ByPass -File", 
+                 paste("\"", file.path(rwebppl_path(), "powershell", "uninstall-package.ps1"), "\"", sep=""), 
+                 paste("\"", path, "\"", sep=""), package_name))
+  }
+  else {
+    system2(file.path(rwebppl_path(), "bash", "uninstall_package.sh"),
+            args = c(path, package_name))
+  }
+  
 }
 
 #' Get samples
@@ -179,18 +240,13 @@ countSamples <- function(output, inference_opts) {
   }
 }
 
-tidy_probTable <- function(output, sort_by) {
+tidy_probTable <- function(output) {
   if (class(output$support) == "data.frame") {
     support <- output$support
   } else {
     support <- data.frame(support = output$support)
   }
-  unsorted_probTable <- cbind(support, data.frame(prob = output$probs))
-  if (sort_by == "prob") {
-    return(unsorted_probTable[with(unsorted_probTable, order(-prob)), ])
-  } else {
-    return(unsorted_probTable[with(unsorted_probTable, order(support)), ])
-  }
+  return(cbind(support, data.frame(prob = output$probs)))
 }
 
 tidy_sampleList <- function(output, chains, chain, inference_opts) {
@@ -214,9 +270,9 @@ tidy_sampleList <- function(output, chains, chain, inference_opts) {
   return(ggmcmc_samples)
 }
 
-tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NULL, sort_by = NULL) {
+tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NULL) {
   if (is_probTable(output)) {
-    return(tidy_probTable(output, sort_by = sort_by))
+    return(tidy_probTable(output))
   } else if (is_sampleList(output)) {
     # Drop redundant score column, if it exists
     if ("score" %in% names(output)) {
@@ -241,91 +297,109 @@ tidy_output <- function(output, chains = NULL, chain = NULL, inference_opts = NU
 #' @param model_var The name by which the model be referenced in the program.
 #' @param inference_opts Options for inference
 #' (see http://webppl.readthedocs.io/en/master/inference.html)
-#' @param random_seed Seed for random number generator
-#' @param sort_by Sort probability table by probability or support (enumeration only)
 #' @param chains Number of chains (this run is one chain).
 #' @param chain Chain number of this run.
 run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
-                       data_var = "data", packages = NULL, model_var = "model",
-                       inference_opts = NULL, chains = NULL, random_seed = NULL,
-                       sort_by = "prob", chain = 1) {
+                       data_var = NULL, packages = NULL, model_var = NULL,
+                       inference_opts = NULL, chains = NULL,
+                       chain = 1) {
 
-  # find location of rwebppl JS script, within rwebppl R package
+  # Get OS
+  system_os <- Sys.info()["sysname"]
+  
+  # Find location of rwebppl JS script, within rwebppl R package
   script_path <- file.path(rwebppl_path(), "js/rwebppl")
 
-  # if data supplied, create a webppl package that exports the data as data_var
+  # If data supplied, create a webppl package that exports the data as data_var
   if (!is.null(data)) {
-    tmp_dir <- tempdir()
-    dir.create(file.path(tmp_dir, data_var), showWarnings = FALSE)
-    cat(sprintf('{"name":"%s","main":"index.js"}', data_var),
-        file = file.path(tmp_dir, data_var, "package.json"))
-    data_string <- jsonlite::toJSON(data, digits = NA)
-    cat(sprintf("module.exports = JSON.parse('%s')", data_string),
-        file = file.path(tmp_dir, data_var, "index.js"))
-    packages <- c(packages, file.path(tmp_dir, data_var))
+    if (is.null(data_var)) {
+      warning("ignoring data (supplied without data_var)")
+    } 
+    else {
+      tmp_dir <- tempdir()
+      dir.create(file.path(tmp_dir, data_var), showWarnings = FALSE)
+      cat(sprintf('{"name":"%s","main":"index.js"}', data_var),
+          file = file.path(tmp_dir, data_var, "package.json"))
+      data_string <- jsonlite::toJSON(data, digits = NA)
+      cat(sprintf("module.exports = JSON.parse('%s')", data_string),
+          file = file.path(tmp_dir, data_var, "index.js"))
+      packages <- c(packages, file.path(tmp_dir, data_var))
+    }
   }
 
-  # set modified_program_code to program_code or to contents of program_file
+  # Set modified_program_code to program_code or to contents of program_file
   if (!is.null(program_code)) {
     if (!is.null(program_file)) {
       warning("both program_code and program_file supplied, using program_code")
     }
     modified_program_code <- program_code
-  } else if (!is.null(program_file)) {
+  } 
+  else if (!is.null(program_file)) {
     if (!file.exists(program_file)) {
       stop("program_file does not exist")
     }
     modified_program_code <- paste(readLines(program_file, warn = FALSE),
                                    collapse = "\n")
-  } else {
+  }
+  else {
     stop("supply one of program_code or program_file")
   }
 
-  # if inference_opts supplied, add an Infer call to the program
+  # If inference_opts and model_var supplied, add an Infer call to the program
   if (!is.null(inference_opts)) {
+    if (is.null(model_var)) {
+      stop("when supplying inference_opts, you must also supply model_var")
+    }
     infer <- sprintf("Infer(JSON.parse('%s'), %s)",
                      jsonlite::toJSON(inference_opts, auto_unbox = TRUE),
                      model_var)
     modified_program_code <- paste(modified_program_code, infer, sep = "\n")
   }
 
-  # create tmp files for program code, program output, and finish signal
+  # Create tmp files for program code, program output, and finish signal
   uid <- uuid::UUIDgenerate()
-  program_file <- sprintf("/tmp/webppl_program_%s", uid)
-  output_file <- sprintf("/tmp/webppl_output_%s", uid)
-  finish_file <- sprintf("/tmp/webppl_finished_%s", uid)
-
-  # create args to pass to rwebppl js, including packages
+  if (system_os == "Windows") {
+    program_file <- paste("", tempdir(), sprintf("\\webppl_program_%s", uid), "", sep="")
+    output_file <- paste("", tempdir(), sprintf("\\webppl_output_%s", uid), "", sep="")
+    finish_file <- paste("", tempdir(), sprintf("\\webppl_finished_%s", uid), "", sep="")
+  }
+  else {
+    program_file <- sprintf("/tmp/webppl_program_%s", uid)
+    output_file <- sprintf("/tmp/webppl_output_%s", uid)
+    finish_file <- sprintf("/tmp/webppl_finished_%s", uid)
+  }
+  
+  # Create args to pass to rwebppl js, including packages
   program_arg <- sprintf("--programFile %s", program_file)
   output_arg <- sprintf("--outputFile %s", output_file)
   finish_arg <- sprintf("--finishFile %s", finish_file)
-  if (!is.null(random_seed)) {
-    seed_arg <- sprintf("--random-seed %s", random_seed)
-  } else {
-    seed_arg <- ""
-  }
-
-  if (!is.null(packages)){
+  if (!is.null(packages)) {
     package_args <- unlist(lapply(packages,
                                   function(x){ return( paste('--require', x) ) }))
-  } else {
+  }
+  else {
     package_args <- ""
   }
 
-  # write modified_program_code to temporary program_file
+  # Write modified_program_code to temporary program_file
   cat(modified_program_code, file = program_file)
 
-  # run rwebppl JS script with model file and packages as arguments
-  # any output to stdout gets sent to the R console while command runs
-  system2(script_path, args = c(program_arg, output_arg, finish_arg, package_args, seed_arg),
-          stdout = "", stderr = "", wait = FALSE)
-
-  # wait for finish file to exist
+  # Run rwebppl JS script with model file and packages as arguments
+  # Any output to stdout gets sent to the R console while command runs
+  if (system_os == "Windows") {
+    system(paste("node", paste("\"", script_path, "\"", sep=""), program_arg, output_arg, finish_arg, package_args), wait = F)
+  }
+  else {
+    system2(script_path, args = c(program_arg, output_arg, finish_arg, package_args),
+            stdout = "", stderr = "", wait = FALSE)
+  }
+  
+  # Wait for finish file to exist
   while (!(file.exists(finish_file))) {
     Sys.sleep(0.25)
   }
-
-  # if the command produced non-empty output, collect and tidy the results
+  
+  # If the command produced non-empty output, collect and tidy the results
   if (file.exists(output_file)) {
     output_string <- paste(readLines(output_file, warn = F),
                            collapse = "\n")
@@ -333,16 +407,16 @@ run_webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
       output <- jsonlite::fromJSON(output_string, flatten = TRUE)
       if (!is.null(names(output))) {
         return(tidy_output(output, chains = chains,
-                           chain = chain, inference_opts = inference_opts,
-                           sort_by = sort_by))
-      } else {
+                           chain = chain, inference_opts = inference_opts))
+      }
+      else {
         return(output)
       }
     }
   }
 }
 
-# declare i as a global variable to avoid NOTE from foreach using NSE
+# Declare i as a global variable to avoid NOTE from foreach using NSE
 globalVariables("i")
 
 #' webppl
@@ -364,8 +438,8 @@ globalVariables("i")
 #' webppl(program_code)
 #' }
 webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
-                   data_var = "data", packages = NULL, model_var = "model",
-                   inference_opts = NULL, random_seed = NULL, sort_by = "prob", chains = 1, cores = 1) {
+                   data_var = NULL, packages = NULL, model_var = NULL,
+                   inference_opts = NULL, chains = 1, cores = 1) {
 
   run_fun <- function(k) run_webppl(program_code = program_code,
                                     program_file = program_file,
@@ -374,8 +448,6 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
                                     packages = packages,
                                     model_var = model_var,
                                     inference_opts = inference_opts,
-                                    random_seed = random_seed,
-                                    sort_by = sort_by,
                                     chains = chains,
                                     chain = k)
   if (chains == 1) {
@@ -389,7 +461,7 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 
 #' Kill rwebppl processes
 #'
-#' @param pids (optional) Vector of process IDs to kill (defaults to killing all
+#' @param pid (optional) Vector of process IDs to kill (defaults to killing all
 #'   rwebppl processes)
 #'
 #' @export
@@ -398,8 +470,14 @@ webppl <- function(program_code = NULL, program_file = NULL, data = NULL,
 #' \dontrun{kill_webppl()}
 #' \dontrun{kill_webppl(6939)}
 kill_webppl <- function(pids = NULL) {
-  if (is.null(pids)){
-    pids <- system2("pgrep", args = c("-f", "webppl_program"), stdout = T)
+  if (is.null(pids)) {
+    if (system_os() == "Windows")
+    {
+      pids <- system("powershell -ExecutionPolicy ByPass -Command Get-Process webppl_program | Select -Expand id")
+    }
+    else {
+      pids <- system2("pgrep", args = c("-f", "webppl_program"), stdout = T)
+    }
   }
   tools::pskill(pids)
 }
