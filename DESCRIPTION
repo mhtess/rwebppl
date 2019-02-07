@@ -1,11 +1,11 @@
 Package: rwebppl
 Type: Package
 Title: R Interface to WebPPL
-Version: 0.1.98
+Version: 0.1.99
 Authors@R: c(
   person("Mika", "Braginsky", email = "mika.br@gmail.com",
          role = c("cre", "aut")),
-  person("Michael Henry", "Tessler", email = "mtessler@stanford.edu",
+  person("Michael Henry", "Tessler", email = "tessler@mit.edu",
          role = c("aut")),
   person("Robert", "Hawkins", email = "rxdh@stanford.edu",
          role = c("aut"))
@@ -27,4 +27,4 @@ Imports:
 RoxygenNote: 6.0.1
 SystemRequirements: node
 Suggests: testthat
-WebPPLVersion: 0.9.11
+WebPPLVersion: 0.9.12
