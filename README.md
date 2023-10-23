@@ -57,11 +57,7 @@ my_model <- '
         map(function(d){
            observe(Binomial({n: d.n, p: p}), d.k)
         }, myDF)
-<<<<<<< HEAD
-  return p
-=======
-	return p
->>>>>>> upstream/master
+        return p
     }
     Infer({model: model, method: "MCMC"})
 '
