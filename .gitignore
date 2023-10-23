@@ -3,6 +3,3 @@
 .RData
 .Ruserdata
 .DS_Store
-inst/js/webppl
-inst/js/package.json
-inst/js/package-lock.json
