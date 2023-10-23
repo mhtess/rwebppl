@@ -7,10 +7,11 @@ RWebPPL is an R package providing an interface to [WebPPL](https://github.com/pr
 ## Installation
 
 #### System requirements
-+ Mac or Linux OS [Windows currently not supported]
++ Mac, Linux OS, or Windows 10/11
 + [R v3.3](https://cran.cnr.berkeley.edu) (or possible newer; in RStudio, type `version`)
 + [node](https://nodejs.org/en/) v4.4.5 or higher (in Terminal, type `node --version`; close and re-open terminal after install)
 + [npm](https://docs.npmjs.com/getting-started/installing-node) v3.6 or higher (in Terminal, type `npm --version`; if it's not >= v3.6; try `sudo npm install npm -g`, close and reopen terminal and check version)
++ (for Windows users) [git](https://gitforwindows.org/) v2.42.0 or higher (in Terminal or CLI, type `git --version`)
 + devtools R library: in R: `install.packages('devtools')`
 
 ```
@@ -56,7 +57,7 @@ my_model <- '
         map(function(d){
            observe(Binomial({n: d.n, p: p}), d.k)
         }, myDF)
-	return p
+        return p
     }
     Infer({model: model, method: "MCMC"})
 '

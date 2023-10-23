@@ -24,7 +24,7 @@ Imports:
     doParallel,
     foreach,
     tidyr
-RoxygenNote: 6.0.1
+RoxygenNote: 7.2.3
 SystemRequirements: node
 Suggests: testthat
 WebPPLVersion: 0.9.15
